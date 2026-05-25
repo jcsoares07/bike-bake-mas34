@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bike&bake - Combate ao Desperdício Alimentar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <style>
+        /* ==========================================================================
+           DESIGN SYSTEM & VARIABLES (CSS VANILLA)
+           ========================================================================== */
+        :root {
+            --primary: #3E5A44;
+            --primary-light: #527559;
+            --background: #FDFBF7;
+            --surface: #FFFFFF;
+            --accent: #E76F51;
+            --accent-light: #F4A261;
+            --text-main: #264653;
+            --text-muted: #708A8A;
+            --border: #E9E6E0;
+            --shadow-sm: 0 2px 4px rgba(62, 90, 68, 0.05);
+            --shadow-md: 0 4px 12px rgba(62, 90, 68, 0.08);
+            --shadow-lg: 0 8px 24px rgba(62, 90, 68, 0.12);
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Envoltório para simular comportamento Mobile-First em Desktop */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 32px rgba(0,0,0,0.05);
+            padding-bottom: 85px; /* Espaço para a Bottom Nav Bar */
+        }
+
+        /* ==========================================================================
+           LAYOUT COMPONENTS (HEADERS & NAV)
+           ========================================================================== */
+        header {
+            background-color: var(--surface);
+            padding: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--primary);
+        }
+
+        .location-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: #F0EDE6;
+            padding: 6px 12px;
+            border-radius: var(--radius-lg);
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #F0EDE6;
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+        }
+
+        .toggle-btn {
+            padding: 6px 12px;
+            border-radius: calc(var(--radius-md) - 2px);
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .toggle-btn.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Bottom Navigation Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid var(--border);
+            z-index: 1000;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.03);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            width: 20%;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .nav-item i, .nav-item svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: 18px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 14px;
+            text-align: center;
+        }
+
+        /* ==========================================================================
+           VIEWS & CONTENT HOUSES
+           ========================================================================== */
+        .view-content {
+            padding: 16px;
+            flex: 1;
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* Quick Filters & Search Bars */
+        .scroll-filters {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0 16px 0;
+            scrollbar-width: none;
+        }
+        .scroll-filters::-webkit-scrollbar { display: none; }
+
+        .filter-chip {
+            white-space: nowrap;
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-chip.active {
+            background: var(--primary);
+            color: var(--surface);
+            border-color: var(--primary);
+        }
+
+        /* Search Interface */
+        .search-container {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 14px 16px 14px 46px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(62, 90, 68, 0.1);
+        }
+        .search-container svg {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Collapsible Advanced Filters */
+        .advanced-trigger {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+            color: var(--primary);
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+        .advanced-filters {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            display: none;
+        }
+        .advanced-filters.open { display: block; }
+        .filter-group { margin-bottom: 12px; }
+        .filter-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+
+        /* ==========================================================================
+           PRODUCT & ESTABLISHMENT CARDS
+           ========================================================================== */
+        .stores-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .store-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            position: relative;
+        }
+        .store-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+        .card-image-wrapper {
+            position: relative;
+            height: 140px;
+            background: #E9E6E0;
+        }
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .time-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: rgba(38, 70, 83, 0.85);
+            color: white;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .distance-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--surface);
+            color: var(--text-main);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-content { padding: 16px; }
+        .card-header-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .store-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+        .rating { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; }
+        .rating svg { color: #FFB703; fill: #FFB703; width: 14px; height: 14px; }
+        
+        .product-preview { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; }
+        
+        /* Allergy Warning inside Card */
+        .allergy-alert {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #FFEAE6;
+            color: #C13515;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .price-box { display: flex; flex-direction: column; }
+        .original-price { font-size: 0.8rem; text-decoration: line-through; color: var(--text-muted); }
+        .bag-price { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        
+        .btn-add-bag {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .btn-add-bag:hover { background: var(--primary-light); }
+
+        /* Map Section View */
+        #map-view { position: relative; width: 100%; height: calc(100vh - 150px); display: none; }
+        #map { width: 100%; height: 100%; z-index: 1; }
+
+        /* ==========================================================================
+           CART & CHECKOUT STYLES
+           ========================================================================== */
+        .cart-item {
+            display: flex;
+            gap: 12px;
+            background: var(--surface);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        .cart-item-img { width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-sm); }
+        .cart-item-details { flex: 1; }
+        .cart-qty-control { display: flex; align-items: center; gap: 8px; }
+        .btn-qty {
+            width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border);
+            background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+        }
+        
+        .totals-card {
+            background: var(--surface); border-radius: var(--radius-md); padding: 16px;
+            border: 1px solid var(--border); margin-top: 24px;
+        }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        .total-row.final { border-top: 1px solid var(--border); padding-top: 8px; font-weight: 700; font-size: 1.1rem; }
+        .premium-discount { color: #2A9D8F; font-weight: 600; }
+
+        .btn-checkout {
+            width: 100%; background: var(--accent); color: white; border: none; padding: 16px;
+            border-radius: var(--radius-md); font-weight: 700; font-size: 1rem; cursor: pointer;
+            margin-top: 16px; transition: var(--transition);
+        }
+        .btn-checkout:hover { background: var(--accent-light); }
+
+        /* ==========================================================================
+           SETTINGS & SUBSCRIPTION PREMIUM
+           ========================================================================== */
+        .settings-section {
+            background: var(--surface); border-radius: var(--radius-md); padding: 16px;
+            border: 1px solid var(--border); margin-bottom: 16px;
+        }
+        .settings-section h3 { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        
+        .checkbox-label {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+            font-size: 0.9rem; cursor: pointer;
+        }
+        .checkbox-label input { width: 18px; height: 18px; accent-color: var(--primary); }
+
+        .premium-card {
+            background: linear-gradient(135deg, #3E5A44 0%, #1E3523 100%);
+            color: white; border-radius: var(--radius-md); padding: 20px; position: relative;
+            overflow: hidden; box-shadow: var(--shadow-lg);
+        }
+        .premium-card h3 { color: #E76F51; font-size: 1.3rem; margin-bottom: 6px; }
+        .premium-features { list-style: none; margin: 12px 0 16px 0; font-size: 0.85rem; opacity: 0.9; }
+        .premium-features li { margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+
+        /* Toggle Switch Custom */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc; transition: .4s; border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; stroke-width: 1.5; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <header>
+            <div class="header-top">
+                <div class="brand">
+                    <i data-lucide="bike"></i>
+                    <span>bike&bake</span>
+                </div>
+                <div class="location-selector">
+                    <i data-lucide="map-pin" style="width:14px; height:14px;"></i>
+                    <span>Porto, Portugal</span>
+                </div>
+            </div>
+            
+            <div id="header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Sacos Excedentes Hoje</span>
+                <div class="view-toggle">
+                    <button class="toggle-btn active" id="btn-list-view">
+                        <i data-lucide="list" style="width: 14px; height: 14px;"></i> Lista
+                    </button>
+                    <button class="toggle-btn" id="btn-map-view">
+                        <i data-lucide="map" style="width: 14px; height: 14px;"></i> Mapa
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main id="view-home" class="view-content active">
+            <div class="scroll-filters">
+                <button class="filter-chip active" data-filter="all">Todos</button>
+                <button class="filter-chip" data-filter="near">Mais Próximos</button>
+                <button class="filter-chip" data-filter="price">Preço < 5€</button>
+                <button class="filter-chip" data-filter="vegan">Vegano</button>
+                <button class="filter-chip" data-filter="bakery">Apenas Padaria</button>
+            </div>
+
+            <div class="stores-grid" id="stores-list-container">
+                </div>
+        </main>
+
+        <div id="map-view">
+            <div id="map"></div>
+        </div>
+
+        <section id="view-search" class="view-content">
+            <div class="search-container">
+                <i data-lucide="search"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="Pesquisa por padaria ou produto (ex: croissant)...">
+            </div>
+
+            <div class="advanced-trigger" id="adv-filter-trigger">
+                <i data-lucide="sliders-horizontal" style="width: 16px;"></i>
+                <span>Filtros Avançados</span>
+            </div>
+
+            <div class="advanced-filters" id="adv-filters-box">
+                <div class="filter-group">
+                    <label>Horário de Recolha</label>
+                    <select id="filter-time" class="search-input" style="padding: 10px;">
+                        <option value="any">Qualquer horário</option>
+                        <option value="morning">Manhã (08h - 12h)</option>
+                        <option value="afternoon">Tarde (12h - 18h)</option>
+                        <option value="evening">Noite (18h - 21h)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="stores-grid" id="search-results-container">
+                </div>
+        </section>
+
+        <section id="view-cart" class="view-content">
+            <h2 style="margin-bottom: 16px; font-size: 1.3rem;">A Tua Sacola</h2>
+            
+            <div id="cart-items-container">
+                </div>
+
+            <div class="totals-card" id="cart-totals-box" style="display: none;">
+                <div class="total-row">
+                    <span>Subtotal</span>
+                    <span id="subtotal-val">0.00€</span>
+                </div>
+                <div class="total-row">
+                    <span>Taxa de Entrega (Eco-Bike)</span>
+                    <span id="delivery-val">2.00€</span>
+                </div>
+                <div class="total-row premium-discount" id="premium-delivery-row" style="display: none;">
+                    <span>Desconto Premium Entrega</span>
+                    <span>-2.00€</span>
+                </div>
+                <div class="total-row premium-discount" id="premium-extra-row" style="display: none;">
+                    <span>Desconto Premium Extra (10%)</span>
+                    <span id="premium-discount-val">-0.00€</span>
+                </div>
+                <div class="total-row final">
+                    <span>Total</span>
+                    <span id="total-val">0.00€</span>
+                </div>
+                
+                <button class="btn-checkout" id="btn-checkout">Finalizar Pedido</button>
+            </div>
+        </section>
+
+        <section id="view-settings" class="view-content">
+            <div class="premium-card" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h3>bike&bake Premium</h3>
+                        <p style="font-size: 0.85rem; opacity: 0.9;">Torna-te um herói do desperdício.</p>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="premium-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <ul class="premium-features">
+                    <li><i data-lucide="check" style="width:14px; color:#E76F51;"></i> Entrega por estafeta de bicicleta Grátis</li>
+                    <li><i data-lucide="check" style="width:14px; color:#E76F51;"></i> -10% de desconto extra em todas as sacolas</li>
+                    <li><i data-lucide="check" style="width:14px; color:#E76F51;"></i> Acesso prioritário a excedentes gourmet</li>
+                </ul>
+            </div>
+
+            <div class="settings-section">
+                <h3><i data-lucide="shield-alert" style="color: var(--accent); width:18px;"></i> Restrições e Alergias</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                    Ativa para receberes avisos de segurança nos produtos dos estabelecimentos.
+                </p>
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" class="allergy-checkbox" value="Glúten">
+                    <span>Contém Glúten</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="allergy-checkbox" value="Lactose">
+                    <span>Contém Lactose</span>
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" class="allergy-checkbox" value="Frutos secos">
+                    <span>Contém Frutos Secos</span>
+                </label>
+            </div>
+
+            <div class="settings-section" style="opacity: 0.7;">
+                <h3><i data-lucide="user" style="width:18px;"></i> Conta</h3>
+                <p style="font-size: 0.85rem;">Utilizador Demo</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">demo@bikeandbake.pt</p>
+            </div>
+        </section>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="home">
+                <i data-lucide="home"></i>
+                <span>Início</span>
+            </button>
+            <button class="nav-item" data-target="search">
+                <i data-lucide="search"></i>
+                <span>Descobrir</span>
+            </button>
+            <button class="nav-item" data-target="cart">
+                <i data-lucide="shopping-bag"></i>
+                <span>Sacola</span>
+                <span class="badge" id="cart-count" style="display: none;">0</span>
+            </button>
+            <button class="nav-item" data-target="settings">
+                <i data-lucide="user"></i>
+                <span>Definições</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <script>
+        /* ==========================================================================
+        1. MOCK DATA (DADOS INICIAIS)
+        ========================================================================== */
+        const INITIAL_STORES = [
+            {
+                id: 1,
+                name: "Padaria da Esquina",
+                type: "bakery",
+                image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop&q=60",
+                distance: 0.4,
+                rating: 4.8,
+                originalPrice: 12.00,
+                salePrice: 3.99,
+                pickupTime: "19:30 - 20:30",
+                pickupPeriod: "evening",
+                productName: "Saco Misto (Pães de Ló & Croissants)",
+                isVegan: false,
+                allergens: ["Glúten", "Lactose"],
+                coords: [41.1496, -8.6110] // Porto Central
+            },
+            {
+                id: 2,
+                name: "Confeitaria Central do Porto",
+                type: "bakery",
+                image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=60",
+                distance: 1.2,
+                rating: 4.6,
+                originalPrice: 15.00,
+                salePrice: 4.50,
+                pickupTime: "18:00 - 19:00",
+                pickupPeriod: "evening",
+                productName: "Saco Bolos Sortidos de Pastelaria",
+                isVegan: false,
+                allergens: ["Glúten", "Lactose", "Frutos secos"],
+                coords: [41.1475, -8.6065]
+            },
+            {
+                id: 3,
+                name: "Massa Mãe - Padaria Artesanal",
+                type: "bakery",
+                image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop&q=60",
+                distance: 0.8,
+                rating: 4.9,
+                originalPrice: 9.00,
+                salePrice: 2.99,
+                pickupTime: "10:30 - 12:00",
+                pickupPeriod: "morning",
+                productName: "Pão de Trigo e Centeio Rústico",
+                isVegan: true,
+                allergens: ["Glúten"],
+                coords: [41.1530, -8.6150]
+            },
+            {
+                id: 4,
+                name: "O Forno Verde (Pastelaria Vegana)",
+                type: "pastry",
+                image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400&auto=format&fit=crop&q=60",
+                distance: 2.5,
+                rating: 4.7,
+                originalPrice: 14.00,
+                salePrice: 4.90,
+                pickupTime: "16:00 - 17:30",
+                pickupPeriod: "afternoon",
+                productName: "Caixa de Natas Veganas & Muffins",
+                isVegan: true,
+                allergens: ["Glúten", "Frutos secos"],
+                coords: [41.1555, -8.6020]
+            },
+            {
+                id: 5,
+                name: "Atelier dos Doces Gourmet",
+                type: "pastry",
+                image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60",
+                distance: 1.9,
+                rating: 4.5,
+                originalPrice: 18.50,
+                salePrice: 5.99,
+                pickupTime: "20:00 - 21:00",
+                pickupPeriod: "evening",
+                productName: "Sortido Macro Premium de Macarons",
+                isVegan: false,
+                allergens: ["Lactose", "Frutos secos"],
+                coords: [41.1420, -8.6120]
+            }
+        ];
+
+        /* ==========================================================================
+        2. GESTÃO DE ESTADO GLOBAL (STATE ARCHITECTURE)
+        ========================================================================== */
+        const State = {
+            stores: INITIAL_STORES,
+            cart: JSON.parse(localStorage.getItem('bb_cart')) || [],
+            isPremium: JSON.parse(localStorage.getItem('bb_premium')) || false,
+            activeAllergens: JSON.parse(localStorage.getItem('bb_allergens')) || [],
+            currentFilters: {
+                quick: 'all',
+                searchQuery: '',
+                pickupTime: 'any'
+            },
+            currentView: 'home', // home, search, cart, settings
+            activeSubView: 'list', // list, map
+            mapInstance: null,
+            mapMarkers: [],
+
+            save() {
+                localStorage.setItem('bb_cart', JSON.stringify(this.cart));
+                localStorage.setItem('bb_premium', JSON.stringify(this.isPremium));
+                localStorage.setItem('bb_allergens', JSON.stringify(this.activeAllergens));
+                this.renderAll();
+            },
+
+            renderAll() {
+                renderCartBadge();
+                if (this.currentView === 'home' && this.activeSubView === 'list') renderStoresList();
+                if (this.currentView === 'search') renderSearchResults();
+                if (this.currentView === 'cart') renderCartView();
+                if (this.currentView === 'settings') renderSettingsView();
+            }
+        };
+
+        /* ==========================================================================
+        3. NAVEGAÇÃO E CONTROLO DE VISTAS
+        ========================================================================== */
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.currentTarget.getAttribute('data-target');
+                switchView(target);
+            });
+        });
+
+        function switchView(viewName) {
+            State.currentView = viewName;
+            
+            // Update Bottom Nav Bar active style
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-target') === viewName);
+            });
+
+            // Hide all major views
+            document.getElementById('view-home').classList.remove('active');
+            document.getElementById('map-view').style.display = 'none';
+            document.getElementById('view-search').classList.remove('active');
+            document.getElementById('view-cart').classList.remove('active');
+            document.getElementById('view-settings').classList.remove('active');
+
+            // Contextual Header display
+            const headerControls = document.getElementById('header-controls');
+            headerControls.style.display = (viewName === 'home') ? 'flex' : 'none';
+
+            // Display specific view
+            if (viewName === 'home') {
+                if (State.activeSubView === 'list') {
+                    document.getElementById('view-home').classList.add('active');
+                } else {
+                    document.getElementById('map-view').style.display = 'block';
+                    initOrUpdateMap();
+                }
+            } else {
+                document.getElementById(`view-${viewName}`).classList.add('active');
+            }
+
+            State.renderAll();
+        }
+
+        // Toggle entre Lista e Mapa na Main Page
+        document.getElementById('btn-list-view').addEventListener('click', () => {
+            toggleMainSubView('list');
+        });
+        document.getElementById('btn-map-view').addEventListener('click', () => {
+            toggleMainSubView('map');
+        });
+
+        function toggleMainSubView(subView) {
+            State.activeSubView = subView;
+            document.getElementById('btn-list-view').classList.toggle('active', subView === 'list');
+            document.getElementById('btn-map-view').classList.toggle('active', subView === 'map');
+            switchView('home');
+        }
+
+        /* ==========================================================================
+        4. LÓGICA DE FILTRAGEM (DATA RENDERING ENGINE)
+        ========================================================================== */
+        function getFilteredStores() {
+            return State.stores.filter(store => {
+                // 1. Quick Filters
+                if (State.currentFilters.quick === 'near' && store.distance > 1.0) return false;
+                if (State.currentFilters.quick === 'price' && store.salePrice >= 5.00) return false;
+                if (State.currentFilters.quick === 'vegan' && !store.isVegan) return false;
+                if (State.currentFilters.quick === 'bakery' && store.type !== 'bakery') return false;
+
+                // 2. Search Box Query
+                if (State.currentFilters.searchQuery) {
+                    const query = State.currentFilters.searchQuery.toLowerCase();
+                    const matchesName = store.name.toLowerCase().includes(query);
+                    const matchesProduct = store.productName.toLowerCase().includes(query);
+                    if (!matchesName && !matchesProduct) return false;
+                }
+
+                // 3. Advanced Filters (Pickup Time)
+                if (State.currentFilters.pickupTime !== 'any' && store.pickupPeriod !== State.currentFilters.pickupTime) return false;
+
+                return true;
+            });
+        }
+
+        // Criação dinâmica das golas/cards HTML
+        function buildStoreCardHTML(store) {
+            // Verifica se há conflito de alergias ativas nas Definições
+            const conflictAllergens = store.allergens.filter(allergy => State.activeAllergens.includes(allergy));
+            const hasAllergyWarning = conflictAllergens.length > 0;
+
+            return `
+                <div class="store-card" data-id="${store.id}">
+                    <div class="card-image-wrapper">
+                        <img src="${store.image}" alt="${store.name}" class="card-img" loading="lazy">
+                        <span class="time-badge">${store.pickupTime}</span>
+                        <span class="distance-badge">${store.distance} km</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header-info">
+                            <h3 class="store-title">${store.name}</h3>
+                            <div class="rating">
+                                <i class="lucide-star"></i>
+                                <span>${store.rating}</span>
+                            </div>
+                        </div>
+                        <p class="product-preview">${store.productName}</p>
+                        
+                        ${hasAllergyWarning ? `
+                            <div class="allergy-alert">
+                                <i data-lucide="alert-triangle" style="width:14px; height:14px;"></i>
+                                <span>Aviso: Contém ${conflictAllergens.join(', ')}</span>
+                            </div>
+                        ` : ''}
+
+                        <div class="card-footer">
+                            <div class="price-box">
+                                <span class="original-price">${store.originalPrice.toFixed(2)}€</span>
+                                <span class="bag-price">${store.salePrice.toFixed(2)}€</span>
+                            </div>
+                            <button class="btn-add-bag" onclick="addToCart(${store.id})">
+                                <i data-lucide="shopping-bag" style="width:16px; height:16px;"></i>
+                                <span>Sacola</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStoresList() {
+            const container = document.getElementById('stores-list-container');
+            const list = getFilteredStores();
+            
+            if (list.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i data-lucide="cookie"></i><p>Não há sacolas disponíveis com estes filtros.</p></div>`;
+            } else {
+                container.innerHTML = list.map(store => buildStoreCardHTML(store)).join('');
+            }
+            lucide.createIcons(); // Processa novos ícones injetados
+        }
+
+        // Eventos para filtros rápidos (Horizontal scroll chips)
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                State.currentFilters.quick = e.currentTarget.getAttribute('data-filter');
+                State.renderAll();
+            });
+        });
+
+        /* ==========================================================================
+        5. MAP INTEGRATION (LEAFLET.JS CONFIG)
+        ========================================================================== */
+        function initOrUpdateMap() {
+            const list = getFilteredStores();
+            
+            // Inicialização única do mapa
+            if (!State.mapInstance) {
+                // Focado por padrão na geo-localização central das mock coords (Porto)
+                State.mapInstance = L.map('map', { zoomControl: false }).setView([41.1500, -8.6100], 14);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                    attribution: '©OpenStreetMap ©CartoDB'
+                }).addTo(State.mapInstance);
+            }
+
+            // Limpar marcadores anteriores
+            State.mapMarkers.forEach(marker => State.mapInstance.removeLayer(marker));
+            State.mapMarkers = [];
+
+            // Adicionar novos Pins reativos ao mapa
+            list.forEach(store => {
+                const customIcon = L.divIcon({
+                    className: 'custom-pin',
+                    html: `<div style="background-color: var(--primary); color: white; padding: 6px 10px; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: var(--shadow-md); white-space: nowrap; font-size:0.8rem;">🥐 ${store.salePrice.toFixed(2)}€</div>`,
+                    iconSize: [60, 30],
+                    iconAnchor: [30, 15]
+                });
+
+                const marker = L.marker(store.coords, { icon: customIcon }).addTo(State.mapInstance);
+                
+                const popupContent = `
+                    <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width:140px;">
+                        <strong style="color: var(--text-main); font-size:0.9rem;">${store.name}</strong>
+                        <p style="margin:4px 0; font-size:0.75rem; color: var(--text-muted);">${store.productName}</p>
+                        <button onclick="addToCart(${store.id})" style="width:100%; background: var(--accent); color:white; border:none; padding:6px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer; margin-top:4px;">+ Adicionar</button>
+                    </div>
+                `;
+                marker.bindPopup(popupContent);
+                State.mapMarkers.push(marker);
+            });
+
+            // Pequeno fix para renderização correta de dimensões dinâmicas do Leaflet em SPAs
+            setTimeout(() => { State.mapInstance.invalidateSize(); }, 200);
+        }
+
+        /* ==========================================================================
+        6. PESQUISA AVANÇADA (DISCOVER VIEW)
+        ========================================================================== */
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+            State.currentFilters.searchQuery = e.target.value;
+            renderSearchResults();
+        });
+
+        // Toggle de Filtros Avançados (Collapsible)
+        document.getElementById('adv-filter-trigger').addEventListener('click', () => {
+            const box = document.getElementById('adv-filters-box');
+            box.classList.toggle('open');
+        });
+
+        document.getElementById('filter-time').addEventListener('change', (e) => {
+            State.currentFilters.pickupTime = e.target.value;
+            renderSearchResults();
+        });
+
+        function renderSearchResults() {
+            const container = document.getElementById('search-results-container');
+            const results = getFilteredStores();
+
+            if (State.currentFilters.searchQuery === '' && State.currentFilters.pickupTime === 'any') {
+                container.innerHTML = `<div class="empty-state"><i data-lucide="search"></i><p>Procura petiscos ou padarias perto de ti.</p></div>`;
+            } else if (results.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i data-lucide="frown"></i><p>Sem correspondências para a tua pesquisa.</p></div>`;
+            } else {
+                container.innerHTML = results.map(store => buildStoreCardHTML(store)).join('');
+            }
+            lucide.createIcons();
+        }
+
+        /* ==========================================================================
+        7. GESTÃO DE SACOLA / CARRINHO (BUSINESS LOGIC)
+        ========================================================================== */
+        window.addToCart = function(storeId) {
+            const store = State.stores.find(s => s.id === storeId);
+            const cartItem = State.cart.find(item => item.id === storeId);
+
+            if (cartItem) {
+                cartItem.quantity += 1;
+            } else {
+                State.cart.push({
+                    id: store.id,
+                    name: store.name,
+                    productName: store.productName,
+                    price: store.salePrice,
+                    image: store.image,
+                    quantity: 1
+                });
+            }
+            
+            // Haptic feedback visual simulado
+            const navBag = document.querySelector('[data-target="cart"]');
+            navBag.style.transform = 'scale(1.15)';
+            setTimeout(() => navBag.style.transform = 'scale(1)', 150);
+
+            State.save();
+        };
+
+        window.updateQty = function(id, delta) {
+            const item = State.cart.find(i => i.id === id);
+            if (!item) return;
+
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                State.cart = State.cart.filter(i => i.id !== id);
+            }
+            State.save();
+        };
+
+        function renderCartBadge() {
+            const badge = document.getElementById('cart-count');
+            const totalItems = State.cart.reduce((acc, curr) => acc + curr.quantity, 0);
+            
+            if (totalItems > 0) {
+                badge.innerText = totalItems;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function renderCartView() {
+            const container = document.getElementById('cart-items-container');
+            const totalsBox = document.getElementById('cart-totals-box');
+
+            if (State.cart.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="shopping-bag"></i>
+                        <p>A tua sacola está vazia.</p>
+                        <small style="display:block; margin-top:8px; color:var(--text-muted)">Salva excedentes da tua zona para evitares o desperdício!</small>
+                    </div>`;
+                totalsBox.style.display = 'none';
+                return;
+            }
+
+            totalsBox.style.display = 'block';
+            container.innerHTML = State.cart.map(item => `
+                <div class="cart-item">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <div class="cart-item-details">
+                        <strong style="font-size:0.95rem; color:var(--text-main); display:block;">${item.name}</strong>
+                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">${item.productName}</span>
+                        <strong style="color:var(--accent); font-size:0.95rem;">${(item.price * item.quantity).toFixed(2)}€</strong>
+                    </div>
+                    <div class="cart-qty-control">
+                        <button class="btn-qty" onclick="updateQty(${item.id}, -1)">-</button>
+                        <span style="font-weight:600; font-size:0.9rem; min-width:14px; text-align:center;">${item.quantity}</span>
+                        <button class="btn-qty" onclick="updateQty(${item.id}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // CÁLCULO DE TOTAIS FINANCEIROS & REATIVIDADE PREMIUM
+            let subtotal = State.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let deliveryFee = 2.00;
+            let premiumExtraDiscount = 0.00;
+
+            const pDeliveryRow = document.getElementById('premium-delivery-row');
+            const pExtraRow = document.getElementById('premium-extra-row');
+
+            if (State.isPremium) {
+                // 1. Regra Premium: Entrega Grátis
+                pDeliveryRow.style.display = 'flex';
+                deliveryFee = 0.00;
+
+                // 2. Regra Premium: Desconto extra de 10% no valor dos produtos
+                pExtraRow.style.display = 'flex';
+                premiumExtraDiscount = subtotal * 0.10;
+                document.getElementById('premium-discount-val').innerText = `-${premiumExtraDiscount.toFixed(2)}€`;
+            } else {
+                pDeliveryRow.style.display = 'none';
+                pExtraRow.style.display = 'none';
+            }
+
+            let totalFinal = (subtotal + deliveryFee) - premiumExtraDiscount;
+            if(totalFinal < 0) totalFinal = 0; // Guardrail financeiro
+
+            document.getElementById('subtotal-val').innerText = `${subtotal.toFixed(2)}€`;
+            document.getElementById('delivery-val').innerText = State.isPremium ? '0.00€' : '2.00€';
+            document.getElementById('total-val').innerText = `${totalFinal.toFixed(2)}€`;
+            
+            lucide.createIcons();
+        }
+
+        // Ação Simular Compra
+        document.getElementById('btn-checkout').addEventListener('click', () => {
+            alert("🎉 Pedido efetuado com sucesso!\nO estafeta eco-friendly de bicicleta já foi notificado.");
+            State.cart = [];
+            State.save();
+            switchView('home');
+        });
+
+
+        /* ==========================================================================
+        8. DEFINIÇÕES, ALERGIAS E SUBSCRÇÃO PREMIUM
+        ========================================================================== */
+        function initSettingsListeners() {
+            const premiumToggle = document.getElementById('premium-toggle');
+            premiumToggle.checked = State.isPremium;
+
+            // Listener reativo da subscrição Premium
+            premiumToggle.addEventListener('change', (e) => {
+                State.isPremium = e.target.checked;
+                State.save();
+            });
+
+            // Listeners para a gestão de alergias nas checkboxes
+            document.querySelectorAll('.allergy-checkbox').forEach(cb => {
+                // Definir estado inicial vindo do LocalStorage
+                if (State.activeAllergens.includes(cb.value)) {
+                    cb.checked = true;
+                }
+
+                cb.addEventListener('change', () => {
+                    const activeChecked = [];
+                    document.querySelectorAll('.allergy-checkbox').forEach(box => {
+                        if (box.checked) activeChecked.push(box.value);
+                    });
+                    State.activeAllergens = activeChecked;
+                    State.save();
+                });
+            });
+        }
+
+        function renderSettingsView() {
+            // Garante que o input reflete o estado atualizado caso mude noutra vista
+            document.getElementById('premium-toggle').checked = State.isPremium;
+        }
+
+
+        /* ==========================================================================
+        9. BOOTSTRAP DE INICIALIZAÇÃO DA APP
+        ========================================================================== */
+        function initApp() {
+            // Registar listeners das definições
+            initSettingsListeners();
+            
+            // Renderizar componentes primordiais
+            State.renderAll();
+            
+            // Ativar ícones gerais Lucide na primeira passagem
+            lucide.createIcons();
+        }
+
+        // Lançamento oficial da aplicação
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+
+    </body>
+</html>
