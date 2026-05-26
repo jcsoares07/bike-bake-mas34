@@ -12,7 +12,7 @@
     
     <style>
         /* ==========================================================================
-           DESIGN SYSTEM & VARIABLES (CSS VANILLA)
+           DESIGN SYSTEM & VARIABLES
            ========================================================================== */
         :root {
             --primary: #3E5A44;
@@ -22,7 +22,7 @@
             --accent: #E76F51;
             --accent-light: #F4A261;
             --text-main: #264653;
-            --text-muted: #708A8A;
+            --text-muted: #5B7373; /* Contraste melhorado (Acessibilidade) */
             --border: #E9E6E0;
             --shadow-sm: 0 2px 4px rgba(62, 90, 68, 0.05);
             --shadow-md: 0 4px 12px rgba(62, 90, 68, 0.08);
@@ -50,7 +50,9 @@
             overflow-x: hidden;
         }
 
-        /* Envoltório para simular comportamento Mobile-First em Desktop */
+        /* Classe utilitária para esconder elementos corretamente */
+        .hidden { display: none !important; }
+
         .app-container {
             width: 100%;
             max-width: 480px;
@@ -60,8 +62,7 @@
             flex-direction: column;
             position: relative;
             box-shadow: 0 0 32px rgba(0,0,0,0.05);
-            padding-bottom: 85px; /* Espaço para a Bottom Nav Bar */
-            display: none; /* Escondido até fazer login */
+            padding-bottom: 85px;
         }
 
         /* Ecrã de Login */
@@ -77,223 +78,66 @@
             text-align: center;
         }
 
+        /* Toast Feedback */
+        #toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background-color: var(--text-main);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-lg);
+            font-size: 0.85rem;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2000;
+            box-shadow: var(--shadow-lg);
+            white-space: nowrap;
+        }
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         /* ==========================================================================
            LAYOUT COMPONENTS (HEADERS & NAV)
            ========================================================================== */
-        header {
-            background-color: var(--surface);
-            padding: 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: var(--primary);
-        }
-
-        .location-selector {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            background: #F0EDE6;
-            padding: 6px 12px;
-            border-radius: var(--radius-lg);
-        }
-
-        .view-toggle {
-            display: flex;
-            background: #F0EDE6;
-            padding: 4px;
-            border-radius: var(--radius-md);
-            border: none;
-            cursor: pointer;
-        }
-
-        .toggle-btn {
-            padding: 6px 12px;
-            border-radius: calc(var(--radius-md) - 2px);
-            border: none;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            background: transparent;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: var(--transition);
-        }
-
-        .toggle-btn.active {
-            background: var(--surface);
-            color: var(--primary);
-            box-shadow: var(--shadow-sm);
-        }
+        header { background-color: var(--surface); padding: 16px; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .brand { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 1.3rem; color: var(--primary); }
+        .location-selector { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); background: #F0EDE6; padding: 6px 12px; border-radius: var(--radius-lg); }
+        .view-toggle { display: flex; background: #F0EDE6; padding: 4px; border-radius: var(--radius-md); border: none; }
+        .toggle-btn { padding: 6px 12px; border-radius: calc(var(--radius-md) - 2px); border: none; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); background: transparent; display: flex; align-items: center; gap: 6px; transition: var(--transition); cursor: pointer; }
+        .toggle-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
 
         /* Bottom Navigation Bar */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            max-width: 480px;
-            background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px));
-            border-top: 1px solid var(--border);
-            z-index: 1000;
-            box-shadow: 0 -4px 16px rgba(0,0,0,0.03);
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            width: 20%;
-            position: relative;
-            transition: var(--transition);
-        }
-
-        .nav-item i, .nav-item svg {
-            width: 22px;
-            height: 22px;
-        }
-
-        .nav-item.active {
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .badge {
-            position: absolute;
-            top: -4px;
-            right: 18px;
-            background: var(--accent);
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 10px;
-            min-width: 14px;
-            text-align: center;
-        }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; justify-content: space-around; padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border); z-index: 1000; box-shadow: 0 -4px 16px rgba(0,0,0,0.03); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: var(--text-muted); font-size: 0.75rem; font-weight: 500; cursor: pointer; width: 20%; position: relative; transition: var(--transition); }
+        .nav-item i, .nav-item svg { width: 22px; height: 22px; }
+        .nav-item.active { color: var(--primary); font-weight: 700; }
+        .badge { position: absolute; top: -4px; right: 18px; background: var(--accent); color: white; font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 10px; min-width: 14px; text-align: center; }
 
         /* ==========================================================================
-           VIEWS & CONTENT HOUSES
+           VIEWS & CONTENT
            ========================================================================== */
-        .view-content {
-            padding: 16px;
-            flex: 1;
-            display: none;
-        }
-
-        .view-content.active {
-            display: block;
-        }
-
-        /* Quick Filters & Search Bars */
-        .scroll-filters {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 4px 0 16px 0;
-            scrollbar-width: none;
-        }
+        .view-content { padding: 16px; flex: 1; display: none; }
+        .view-content.active { display: block; }
+        .scroll-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 16px 0; scrollbar-width: none; }
         .scroll-filters::-webkit-scrollbar { display: none; }
-
-        .filter-chip {
-            white-space: nowrap;
-            padding: 8px 16px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .filter-chip.active {
-            background: var(--primary);
-            color: var(--surface);
-            border-color: var(--primary);
-        }
+        .filter-chip { white-space: nowrap; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); font-size: 0.85rem; font-weight: 500; color: var(--text-main); cursor: pointer; transition: var(--transition); }
+        .filter-chip.active { background: var(--primary); color: var(--surface); border-color: var(--primary); }
 
         /* Search Interface */
-        .search-container {
-            position: relative;
-            margin-bottom: 16px;
-        }
-        .search-input {
-            width: 100%;
-            padding: 14px 16px 14px 46px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            background: var(--surface);
-            font-size: 0.95rem;
-            outline: none;
-            transition: var(--transition);
-        }
-        .search-input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(62, 90, 68, 0.1);
-        }
-        .search-container svg {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            width: 18px;
-            height: 18px;
-        }
+        .search-container { position: relative; margin-bottom: 16px; }
+        .search-input { width: 100%; padding: 14px 16px 14px 46px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); font-size: 0.95rem; outline: none; transition: var(--transition); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(62, 90, 68, 0.1); }
+        .search-container svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px; }
 
-        /* Collapsible Advanced Filters */
-        .advanced-trigger {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-            color: var(--primary);
-            font-weight: 600;
-            cursor: pointer;
-            margin-bottom: 16px;
-        }
-        .advanced-filters {
-            background: var(--surface);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid var(--border);
-            display: none;
-        }
+        .advanced-trigger { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--primary); font-weight: 600; cursor: pointer; margin-bottom: 16px; background: none; border: none; }
+        .advanced-filters { background: var(--surface); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); display: none; }
         .advanced-filters.open { display: block; }
         .filter-group { margin-bottom: 12px; }
         .filter-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
@@ -301,184 +145,61 @@
         /* ==========================================================================
            PRODUCT & ESTABLISHMENT CARDS
            ========================================================================== */
-        .stores-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .store-card {
-            background: var(--surface);
-            border-radius: var(--radius-md);
-            overflow: hidden;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-            position: relative;
-        }
+        .stores-grid { display: flex; flex-direction: column; gap: 16px; }
+        .store-card { background: var(--surface); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: var(--transition); position: relative; }
         .store-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-
-        .card-image-wrapper {
-            position: relative;
-            height: 140px;
-            background: #E9E6E0;
-        }
-        .card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .time-badge {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            background: rgba(38, 70, 83, 0.85);
-            color: white;
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .distance-badge {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: var(--surface);
-            color: var(--text-main);
-            padding: 4px 8px;
-            border-radius: var(--radius-sm);
-            font-size: 0.75rem;
-            font-weight: 600;
-            box-shadow: var(--shadow-sm);
-        }
-
+        .card-image-wrapper { position: relative; height: 140px; background: #E9E6E0; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        .time-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(38, 70, 83, 0.85); color: white; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; }
+        .distance-badge { position: absolute; top: 12px; right: 12px; background: var(--surface); color: var(--text-main); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); }
         .card-content { padding: 16px; }
         .card-header-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
         .store-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
         .rating { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; }
         .rating svg { color: #FFB703; fill: #FFB703; width: 14px; height: 14px; }
-        
         .product-preview { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; }
-        
-        /* Allergy Warning inside Card */
-        .allergy-alert {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #FFEAE6;
-            color: #C13515;
-            padding: 6px 10px;
-            border-radius: var(--radius-sm);
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .card-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 12px;
-            border-top: 1px solid var(--border);
-        }
+        .allergy-alert { display: flex; align-items: center; gap: 6px; background: #FFEAE6; color: #C13515; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; margin-bottom: 12px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
         .price-box { display: flex; flex-direction: column; }
         .original-price { font-size: 0.8rem; text-decoration: line-through; color: var(--text-muted); }
         .bag-price { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-        
-        .btn-add-bag {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 16px;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: var(--transition);
-        }
+        .btn-add-bag { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: var(--transition); }
         .btn-add-bag:hover { background: var(--primary-light); }
 
-        /* Map Section View */
         #map-view { position: relative; width: 100%; height: calc(100vh - 150px); display: none; }
         #map { width: 100%; height: 100%; z-index: 1; }
 
         /* ==========================================================================
-           CART & CHECKOUT STYLES
+           CART & CHECKOUT
            ========================================================================== */
-        .cart-item {
-            display: flex;
-            gap: 12px;
-            background: var(--surface);
-            padding: 12px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            margin-bottom: 12px;
-            align-items: center;
-        }
+        .cart-item { display: flex; gap: 12px; background: var(--surface); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border); margin-bottom: 12px; align-items: center; }
         .cart-item-img { width: 60px; height: 60px; object-fit: cover; border-radius: var(--radius-sm); }
         .cart-item-details { flex: 1; }
         .cart-qty-control { display: flex; align-items: center; gap: 8px; }
-        .btn-qty {
-            width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border);
-            background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-weight: bold;
-        }
-        
-        .totals-card {
-            background: var(--surface); border-radius: var(--radius-md); padding: 16px;
-            border: 1px solid var(--border); margin-top: 16px;
-        }
+        .btn-qty { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .totals-card { background: var(--surface); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border); margin-top: 16px; }
         .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
         .total-row.final { border-top: 1px solid var(--border); padding-top: 8px; font-weight: 700; font-size: 1.1rem; }
         .premium-discount { color: #2A9D8F; font-weight: 600; }
-
-        .btn-checkout {
-            width: 100%; background: var(--accent); color: white; border: none; padding: 16px;
-            border-radius: var(--radius-md); font-weight: 700; font-size: 1rem; cursor: pointer;
-            margin-top: 16px; transition: var(--transition);
-        }
+        .btn-checkout { width: 100%; background: var(--accent); color: white; border: none; padding: 16px; border-radius: var(--radius-md); font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 16px; transition: var(--transition); }
         .btn-checkout:hover { background: var(--accent-light); }
 
         /* ==========================================================================
-           SETTINGS & SUBSCRIPTION PREMIUM
+           SETTINGS & PREMIUM
            ========================================================================== */
-        .settings-section {
-            background: var(--surface); border-radius: var(--radius-md); padding: 16px;
-            border: 1px solid var(--border); margin-bottom: 16px;
-        }
+        .settings-section { background: var(--surface); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border); margin-bottom: 16px; }
         .settings-section h3 { font-size: 1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        
-        .checkbox-label {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-            font-size: 0.9rem; cursor: pointer;
-        }
-        .checkbox-label input[type="checkbox"], .checkbox-label input[type="radio"] { 
-            width: 18px; height: 18px; accent-color: var(--primary); 
-        }
-
-        .premium-card {
-            background: linear-gradient(135deg, #3E5A44 0%, #1E3523 100%);
-            color: white; border-radius: var(--radius-md); padding: 20px; position: relative;
-            overflow: hidden; box-shadow: var(--shadow-lg);
-        }
+        .checkbox-label { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9rem; cursor: pointer; }
+        .checkbox-label input[type="checkbox"], .checkbox-label input[type="radio"] { width: 18px; height: 18px; accent-color: var(--primary); }
+        .premium-card { background: linear-gradient(135deg, #3E5A44 0%, #1E3523 100%); color: white; border-radius: var(--radius-md); padding: 20px; position: relative; overflow: hidden; box-shadow: var(--shadow-lg); }
         .premium-card h3 { color: #E76F51; font-size: 1.3rem; margin-bottom: 6px; }
         .premium-features { list-style: none; margin: 12px 0 16px 0; font-size: 0.85rem; opacity: 0.9; }
         .premium-features li { margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 
-        /* Toggle Switch Custom */
         .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc; transition: .4s; border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px;
-            background-color: white; transition: .4s; border-radius: 50%;
-        }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--accent); }
         input:checked + .slider:before { transform: translateX(24px); }
 
@@ -487,6 +208,8 @@
     </style>
 </head>
 <body>
+
+    <div id="toast"></div>
 
     <div id="login-screen">
         <div class="login-container">
@@ -507,7 +230,7 @@
         </div>
     </div>
 
-    <div class="app-container" id="main-app-container">
+    <div class="app-container hidden" id="main-app-container">
         
         <header>
             <div class="header-top">
@@ -515,7 +238,7 @@
                     <i data-lucide="bike"></i>
                     <span>bike&bake</span>
                 </div>
-                <div class="location-selector">
+                <div class="location-selector" aria-label="Localização atual">
                     <i data-lucide="map-pin" style="width:14px; height:14px;"></i>
                     <span>Aveiro</span>
                 </div>
@@ -524,10 +247,10 @@
             <div id="header-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
                 <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">Sacos Excedentes Hoje</span>
                 <div class="view-toggle">
-                    <button class="toggle-btn active" id="btn-list-view">
+                    <button class="toggle-btn active" id="btn-list-view" aria-label="Vista de Lista">
                         <i data-lucide="list" style="width: 14px; height: 14px;"></i> Lista
                     </button>
-                    <button class="toggle-btn" id="btn-map-view">
+                    <button class="toggle-btn" id="btn-map-view" aria-label="Vista de Mapa">
                         <i data-lucide="map" style="width: 14px; height: 14px;"></i> Mapa
                     </button>
                 </div>
@@ -544,7 +267,7 @@
             </div>
 
             <div class="stores-grid" id="stores-list-container">
-                </div>
+            </div>
         </main>
 
         <div id="map-view">
@@ -557,14 +280,14 @@
                 <input type="text" id="search-input" class="search-input" placeholder="Pesquisa por padaria ou produto (ex: croissant)...">
             </div>
 
-            <div class="advanced-trigger" id="adv-filter-trigger">
+            <button class="advanced-trigger" id="adv-filter-trigger" aria-label="Filtros Avançados">
                 <i data-lucide="sliders-horizontal" style="width: 16px;"></i>
                 <span>Filtros Avançados</span>
-            </div>
+            </button>
 
             <div class="advanced-filters" id="adv-filters-box">
                 <div class="filter-group">
-                    <label>Horário de Recolha</label>
+                    <label for="filter-time">Horário de Recolha</label>
                     <select id="filter-time" class="search-input" style="padding: 10px;">
                         <option value="any">Qualquer horário</option>
                         <option value="morning">Manhã (08h - 12h)</option>
@@ -575,14 +298,14 @@
             </div>
 
             <div class="stores-grid" id="search-results-container">
-                </div>
+            </div>
         </section>
 
         <section id="view-cart" class="view-content">
             <h2 style="margin-bottom: 16px; font-size: 1.3rem;">A Tua Sacola</h2>
             
             <div id="cart-items-container">
-                </div>
+            </div>
 
             <div id="delivery-options" class="settings-section" style="margin-top: 16px; margin-bottom: 16px; display: none;">
                 <h3 style="margin-bottom: 12px; font-size: 1rem;"><i data-lucide="truck" style="width: 18px; color: var(--primary);"></i> Método de Recolha</h3>
@@ -630,7 +353,7 @@
                         <p style="font-size: 0.85rem; opacity: 0.9;">Torna-te um herói do desperdício.</p>
                     </div>
                     <label class="switch">
-                        <input type="checkbox" id="premium-toggle">
+                        <input type="checkbox" id="premium-toggle" aria-label="Ativar Premium">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -664,25 +387,26 @@
             <div class="settings-section" style="opacity: 0.7;">
                 <h3><i data-lucide="user" style="width:18px;"></i> Conta</h3>
                 <p style="font-size: 0.85rem;">Utilizador Atual</p>
-                <p style="font-size: 0.85rem; color: var(--text-muted);" id="user-email-display">user@bikeandbake.pt</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);" id="user-email-display">A carregar...</p>
+                <button id="btn-logout" style="margin-top: 12px; background: none; border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; color: var(--text-muted);">Terminar Sessão</button>
             </div>
         </section>
 
         <nav class="bottom-nav">
-            <button class="nav-item active" data-target="home">
+            <button class="nav-item active" data-target="home" aria-label="Ir para Início">
                 <i data-lucide="home"></i>
                 <span>Início</span>
             </button>
-            <button class="nav-item" data-target="search">
+            <button class="nav-item" data-target="search" aria-label="Ir para Descobrir">
                 <i data-lucide="search"></i>
                 <span>Descobrir</span>
             </button>
-            <button class="nav-item" data-target="cart">
+            <button class="nav-item" data-target="cart" aria-label="Ir para Sacola">
                 <i data-lucide="shopping-bag"></i>
                 <span>Sacola</span>
                 <span class="badge" id="cart-count" style="display: none;">0</span>
             </button>
-            <button class="nav-item" data-target="settings">
+            <button class="nav-item" data-target="settings" aria-label="Ir para Definições">
                 <i data-lucide="user"></i>
                 <span>Definições</span>
             </button>
@@ -694,126 +418,58 @@
     
     <script>
         /* ==========================================================================
-        1. LOGIN SYSTEM MOCK
+        0. UTILITIES & SEGURANÇA
         ========================================================================== */
-        document.getElementById('btn-login').addEventListener('click', () => {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            
-            if (email && pass) {
-                // Simula login
-                document.getElementById('login-screen').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('login-screen').style.display = 'none';
-                    document.getElementById('main-app-container').style.display = 'flex';
-                    document.getElementById('user-email-display').innerText = email;
-                    initApp(); // Inicializa o app só depois do login
-                }, 300);
-            } else {
-                alert('Por favor, preenche o teu email e palavra-passe.');
+        // Evita erros se o LocalStorage for bloqueado ou o JSON estiver corrompido
+        function safeJSONParse(key, fallback) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : fallback;
+            } catch (error) {
+                console.error(`Erro ao carregar ${key} do localStorage`, error);
+                return fallback;
             }
-        });
+        }
+
+        // Sanitização de HTML para evitar XSS
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Sistema de Feedback (Toast)
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
 
         /* ==========================================================================
-        2. MOCK DATA (DADOS INICIAIS - BUNDLES INDIVIDUAIS E COORDENADAS AVEIRO)
+        1. MOCK DATA
         ========================================================================== */
         const INITIAL_STORES = [
-            {
-                id: 1,
-                name: "Padaria Ria Bakes",
-                type: "bakery",
-                image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop&q=60",
-                distance: 0.4,
-                rating: 4.8,
-                originalPrice: 2.50,
-                salePrice: 1.00,
-                pickupTime: "19:30 - 20:30",
-                pickupPeriod: "evening",
-                productName: "3 Pães de Água",
-                isVegan: true,
-                allergens: ["Glúten"],
-                coords: [40.6415, -8.6536] // Aveiro
-            },
-            {
-                id: 2,
-                name: "Confeitaria da Praça",
-                type: "bakery",
-                image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=60",
-                distance: 1.2,
-                rating: 4.6,
-                originalPrice: 3.50,
-                salePrice: 1.50,
-                pickupTime: "18:00 - 19:00",
-                pickupPeriod: "evening",
-                productName: "1 Croissant Brioche",
-                isVegan: false,
-                allergens: ["Glúten", "Lactose", "Frutos secos"],
-                coords: [40.6400, -8.6550] // Aveiro
-            },
-            {
-                id: 3,
-                name: "Massa Mãe - Padaria",
-                type: "bakery",
-                image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop&q=60",
-                distance: 0.8,
-                rating: 4.9,
-                originalPrice: 4.00,
-                salePrice: 2.00,
-                pickupTime: "10:30 - 12:00",
-                pickupPeriod: "morning",
-                productName: "1 Pão de Centeio Rústico",
-                isVegan: true,
-                allergens: ["Glúten"],
-                coords: [40.6435, -8.6510] // Aveiro
-            },
-            {
-                id: 4,
-                name: "O Forno Verde Vegano",
-                type: "pastry",
-                image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400&auto=format&fit=crop&q=60",
-                distance: 2.5,
-                rating: 4.7,
-                originalPrice: 5.50,
-                salePrice: 2.50,
-                pickupTime: "16:00 - 17:30",
-                pickupPeriod: "afternoon",
-                productName: "2 Muffins de Banana",
-                isVegan: true,
-                allergens: ["Glúten", "Frutos secos"],
-                coords: [40.6385, -8.6580] // Aveiro
-            },
-            {
-                id: 5,
-                name: "Ovos Moles Gourmet",
-                type: "pastry",
-                image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60",
-                distance: 1.9,
-                rating: 4.5,
-                originalPrice: 6.00,
-                salePrice: 3.00,
-                pickupTime: "20:00 - 21:00",
-                pickupPeriod: "evening",
-                productName: "4 Ovos Moles de Aveiro",
-                isVegan: false,
-                allergens: ["Lactose"],
-                coords: [40.6405, -8.6530] // Aveiro
-            }
+            { id: 1, name: "Padaria Ria Bakes", type: "bakery", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop&q=60", distance: 0.4, rating: 4.8, originalPrice: 2.50, salePrice: 1.00, pickupTime: "19:30 - 20:30", pickupPeriod: "evening", productName: "3 Pães de Água", isVegan: true, allergens: ["Glúten"], coords: [40.6415, -8.6536] },
+            { id: 2, name: "Confeitaria da Praça", type: "bakery", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=60", distance: 1.2, rating: 4.6, originalPrice: 3.50, salePrice: 1.50, pickupTime: "18:00 - 19:00", pickupPeriod: "evening", productName: "1 Croissant Brioche", isVegan: false, allergens: ["Glúten", "Lactose", "Frutos secos"], coords: [40.6400, -8.6550] },
+            { id: 3, name: "Massa Mãe - Padaria", type: "bakery", image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop&q=60", distance: 0.8, rating: 4.9, originalPrice: 4.00, salePrice: 2.00, pickupTime: "10:30 - 12:00", pickupPeriod: "morning", productName: "1 Pão de Centeio Rústico", isVegan: true, allergens: ["Glúten"], coords: [40.6435, -8.6510] },
+            { id: 4, name: "O Forno Verde Vegano", type: "pastry", image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400&auto=format&fit=crop&q=60", distance: 2.5, rating: 4.7, originalPrice: 5.50, salePrice: 2.50, pickupTime: "16:00 - 17:30", pickupPeriod: "afternoon", productName: "2 Muffins de Banana", isVegan: true, allergens: ["Glúten", "Frutos secos"], coords: [40.6385, -8.6580] },
+            { id: 5, name: "Ovos Moles Gourmet", type: "pastry", image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60", distance: 1.9, rating: 4.5, originalPrice: 6.00, salePrice: 3.00, pickupTime: "20:00 - 21:00", pickupPeriod: "evening", productName: "4 Ovos Moles de Aveiro", isVegan: false, allergens: ["Lactose"], coords: [40.6405, -8.6530] }
         ];
 
         /* ==========================================================================
-        3. GESTÃO DE ESTADO GLOBAL (STATE ARCHITECTURE)
+        2. GESTÃO DE ESTADO GLOBAL
         ========================================================================== */
         const State = {
             stores: INITIAL_STORES,
-            cart: JSON.parse(localStorage.getItem('bb_cart')) || [],
-            isPremium: JSON.parse(localStorage.getItem('bb_premium')) || false,
-            activeAllergens: JSON.parse(localStorage.getItem('bb_allergens')) || [],
-            deliveryMethod: JSON.parse(localStorage.getItem('bb_delivery')) || 'pickup',
-            currentFilters: {
-                quick: 'all',
-                searchQuery: '',
-                pickupTime: 'any'
-            },
+            cart: safeJSONParse('bb_cart', []),
+            isPremium: safeJSONParse('bb_premium', false),
+            activeAllergens: safeJSONParse('bb_allergens', []),
+            deliveryMethod: safeJSONParse('bb_delivery', 'pickup'),
+            loggedUser: localStorage.getItem('bb_user') || null,
+            // Separação dos filtros entre views para não interferirem
+            homeFilters: { quick: 'all' },
+            searchFilters: { query: '', pickupTime: 'any' },
             currentView: 'home', 
             activeSubView: 'list', 
             mapInstance: null,
@@ -837,12 +493,40 @@
         };
 
         /* ==========================================================================
-        4. NAVEGAÇÃO E CONTROLO DE VISTAS
+        3. SISTEMA DE LOGIN (COM PERSISTÊNCIA)
+        ========================================================================== */
+        function performLoginTransition(email) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app-container').classList.remove('hidden');
+            document.getElementById('user-email-display').innerText = email;
+            initApp();
+        }
+
+        document.getElementById('btn-login').addEventListener('click', () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            
+            // Validação mínima de email
+            if (email.includes('@') && email.length > 4 && pass.length > 2) {
+                localStorage.setItem('bb_user', email);
+                State.loggedUser = email;
+                performLoginTransition(email);
+            } else {
+                alert('Por favor, insere um email válido e palavra-passe.');
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            localStorage.removeItem('bb_user');
+            location.reload();
+        });
+
+        /* ==========================================================================
+        4. NAVEGAÇÃO
         ========================================================================== */
         document.querySelectorAll('.nav-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const target = e.currentTarget.getAttribute('data-target');
-                switchView(target);
+                switchView(e.currentTarget.getAttribute('data-target'));
             });
         });
 
@@ -876,12 +560,8 @@
             State.renderAll();
         }
 
-        document.getElementById('btn-list-view').addEventListener('click', () => {
-            toggleMainSubView('list');
-        });
-        document.getElementById('btn-map-view').addEventListener('click', () => {
-            toggleMainSubView('map');
-        });
+        document.getElementById('btn-list-view').addEventListener('click', () => toggleMainSubView('list'));
+        document.getElementById('btn-map-view').addEventListener('click', () => toggleMainSubView('map'));
 
         function toggleMainSubView(subView) {
             State.activeSubView = subView;
@@ -894,45 +574,59 @@
         5. LÓGICA DE FILTRAGEM (DATA RENDERING ENGINE)
         ========================================================================== */
         function getFilteredStores() {
-            return State.stores.filter(store => {
-                if (State.currentFilters.quick === 'near' && store.distance > 1.0) return false;
-                if (State.currentFilters.quick === 'price' && store.salePrice >= 5.00) return false;
-                if (State.currentFilters.quick === 'vegan' && !store.isVegan) return false;
-                if (State.currentFilters.quick === 'bakery' && store.type !== 'bakery') return false;
-
-                if (State.currentFilters.searchQuery) {
-                    const query = State.currentFilters.searchQuery.toLowerCase();
-                    const matchesName = store.name.toLowerCase().includes(query);
-                    const matchesProduct = store.productName.toLowerCase().includes(query);
-                    if (!matchesName && !matchesProduct) return false;
+            let list = State.stores.filter(store => {
+                // Filtros do Ecrã Início
+                if (State.currentView === 'home' || State.activeSubView === 'map') {
+                    if (State.homeFilters.quick === 'price' && store.salePrice >= 5.00) return false;
+                    if (State.homeFilters.quick === 'vegan' && !store.isVegan) return false;
+                    if (State.homeFilters.quick === 'bakery' && store.type !== 'bakery') return false;
                 }
-
-                if (State.currentFilters.pickupTime !== 'any' && store.pickupPeriod !== State.currentFilters.pickupTime) return false;
+                
+                // Filtros do Ecrã Descobrir
+                if (State.currentView === 'search') {
+                    if (State.searchFilters.query) {
+                        const query = State.searchFilters.query.toLowerCase();
+                        const matchesName = store.name.toLowerCase().includes(query);
+                        const matchesProduct = store.productName.toLowerCase().includes(query);
+                        if (!matchesName && !matchesProduct) return false;
+                    }
+                    if (State.searchFilters.pickupTime !== 'any' && store.pickupPeriod !== State.searchFilters.pickupTime) return false;
+                }
 
                 return true;
             });
+
+            // Ordenação para "Mais Próximos" em vez de corte arbitrário (Bugfix #4)
+            if (State.currentView === 'home' && State.homeFilters.quick === 'near') {
+                list.sort((a, b) => a.distance - b.distance);
+            }
+
+            return list;
         }
 
         function buildStoreCardHTML(store) {
             const conflictAllergens = store.allergens.filter(allergy => State.activeAllergens.includes(allergy));
             const hasAllergyWarning = conflictAllergens.length > 0;
+            
+            // XSS Prevention aplicado a campos de texto
+            const safeName = escapeHTML(store.name);
+            const safeProduct = escapeHTML(store.productName);
 
             return `
                 <div class="store-card" data-id="${store.id}">
                     <div class="card-image-wrapper">
-                        <img src="${store.image}" alt="${store.name}" class="card-img" loading="lazy">
+                        <img src="${store.image}" alt="${safeName}" class="card-img" loading="lazy" onerror="this.src='https://via.placeholder.com/400x200?text=Imagem+Indisponível'">
                         <span class="time-badge">${store.pickupTime}</span>
                         <span class="distance-badge">${store.distance} km</span>
                     </div>
                     <div class="card-content">
                         <div class="card-header-info">
-                            <h3 class="store-title">${store.name}</h3>
+                            <h3 class="store-title">${safeName}</h3>
                             <div class="rating">
-                                <i class="lucide-star"></i>
-                                <span>${store.rating}</span>
+                                <i data-lucide="star"></i> <span>${store.rating}</span>
                             </div>
                         </div>
-                        <p class="product-preview">${store.productName}</p>
+                        <p class="product-preview">${safeProduct}</p>
                         
                         ${hasAllergyWarning ? `
                             <div class="allergy-alert">
@@ -946,7 +640,7 @@
                                 <span class="original-price">${store.originalPrice.toFixed(2)}€</span>
                                 <span class="bag-price">${store.salePrice.toFixed(2)}€</span>
                             </div>
-                            <button class="btn-add-bag" onclick="addToCart(${store.id})">
+                            <button class="btn-add-bag" onclick="addToCart(${store.id})" aria-label="Adicionar ${safeName} à sacola">
                                 <i data-lucide="shopping-bag" style="width:16px; height:16px;"></i>
                                 <span>Sacola</span>
                             </button>
@@ -965,26 +659,26 @@
             } else {
                 container.innerHTML = list.map(store => buildStoreCardHTML(store)).join('');
             }
-            lucide.createIcons();
+            // Otimização: processa apenas os ícones dentro do container
+            lucide.createIcons({ root: container });
         }
 
         document.querySelectorAll('.filter-chip').forEach(chip => {
             chip.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
                 e.currentTarget.classList.add('active');
-                State.currentFilters.quick = e.currentTarget.getAttribute('data-filter');
+                State.homeFilters.quick = e.currentTarget.getAttribute('data-filter');
                 State.renderAll();
             });
         });
 
         /* ==========================================================================
-        6. MAP INTEGRATION (LEAFLET.JS CONFIG) - Focado em Aveiro
+        6. MAP INTEGRATION (LEAFLET.JS)
         ========================================================================== */
         function initOrUpdateMap() {
             const list = getFilteredStores();
             
             if (!State.mapInstance) {
-                // Coordenadas Centrais de Aveiro
                 State.mapInstance = L.map('map', { zoomControl: false }).setView([40.6405, -8.6538], 14);
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     attribution: '©OpenStreetMap ©CartoDB'
@@ -997,7 +691,8 @@
             list.forEach(store => {
                 const customIcon = L.divIcon({
                     className: 'custom-pin',
-                    html: `<div style="background-color: var(--primary); color: white; padding: 6px 10px; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: var(--shadow-md); white-space: nowrap; font-size:0.8rem;">🥐 ${store.salePrice.toFixed(2)}€</div>`,
+                    // Substituída a CSS var isolada por código HEX seguro em contextos alheios ao DOM Principal
+                    html: `<div style="background-color: #3E5A44; color: white; padding: 6px 10px; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); white-space: nowrap; font-size:0.8rem;">🥐 ${store.salePrice.toFixed(2)}€</div>`,
                     iconSize: [60, 30],
                     iconAnchor: [30, 15]
                 });
@@ -1006,8 +701,8 @@
                 
                 const popupContent = `
                     <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width:140px;">
-                        <strong style="color: var(--text-main); font-size:0.9rem;">${store.name}</strong>
-                        <p style="margin:4px 0; font-size:0.75rem; color: var(--text-muted);">${store.productName}</p>
+                        <strong style="color: var(--text-main); font-size:0.9rem;">${escapeHTML(store.name)}</strong>
+                        <p style="margin:4px 0; font-size:0.75rem; color: var(--text-muted);">${escapeHTML(store.productName)}</p>
                         <button onclick="addToCart(${store.id})" style="width:100%; background: var(--accent); color:white; border:none; padding:6px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer; margin-top:4px;">+ Adicionar</button>
                     </div>
                 `;
@@ -1015,7 +710,10 @@
                 State.mapMarkers.push(marker);
             });
 
-            setTimeout(() => { State.mapInstance.invalidateSize(); }, 200);
+            // Resolução da Race Condition do Mapa usando requestAnimationFrame
+            requestAnimationFrame(() => {
+                if (State.mapInstance) State.mapInstance.invalidateSize();
+            });
         }
 
         /* ==========================================================================
@@ -1023,7 +721,7 @@
         ========================================================================== */
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => {
-            State.currentFilters.searchQuery = e.target.value;
+            State.searchFilters.query = e.target.value;
             renderSearchResults();
         });
 
@@ -1033,7 +731,7 @@
         });
 
         document.getElementById('filter-time').addEventListener('change', (e) => {
-            State.currentFilters.pickupTime = e.target.value;
+            State.searchFilters.pickupTime = e.target.value;
             renderSearchResults();
         });
 
@@ -1041,14 +739,14 @@
             const container = document.getElementById('search-results-container');
             const results = getFilteredStores();
 
-            if (State.currentFilters.searchQuery === '' && State.currentFilters.pickupTime === 'any') {
+            if (State.searchFilters.query === '' && State.searchFilters.pickupTime === 'any') {
                 container.innerHTML = `<div class="empty-state"><i data-lucide="search"></i><p>Procura petiscos ou padarias perto de ti.</p></div>`;
             } else if (results.length === 0) {
                 container.innerHTML = `<div class="empty-state"><i data-lucide="frown"></i><p>Sem correspondências para a tua pesquisa.</p></div>`;
             } else {
                 container.innerHTML = results.map(store => buildStoreCardHTML(store)).join('');
             }
-            lucide.createIcons();
+            lucide.createIcons({ root: container });
         }
 
         /* ==========================================================================
@@ -1071,6 +769,9 @@
                 });
             }
             
+            // Adicionado Toast de Feedback visual (UX)
+            showToast(`Adicionado à sacola: ${store.name}`);
+
             const navBag = document.querySelector('[data-target="cart"]');
             navBag.style.transform = 'scale(1.15)';
             setTimeout(() => navBag.style.transform = 'scale(1)', 150);
@@ -1121,7 +822,6 @@
             totalsBox.style.display = 'block';
             deliveryBox.style.display = 'block';
             
-            // Garantir que a opção de entrega reflete o Estado
             if (State.deliveryMethod === 'bike') {
                 document.getElementById('radio-bike').checked = true;
             } else {
@@ -1130,16 +830,16 @@
 
             container.innerHTML = State.cart.map(item => `
                 <div class="cart-item">
-                    <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                    <img src="${item.image}" alt="${escapeHTML(item.name)}" class="cart-item-img">
                     <div class="cart-item-details">
-                        <strong style="font-size:0.95rem; color:var(--text-main); display:block;">${item.name}</strong>
-                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">${item.productName}</span>
+                        <strong style="font-size:0.95rem; color:var(--text-main); display:block;">${escapeHTML(item.name)}</strong>
+                        <span style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:4px;">${escapeHTML(item.productName)}</span>
                         <strong style="color:var(--accent); font-size:0.95rem;">${(item.price * item.quantity).toFixed(2)}€</strong>
                     </div>
                     <div class="cart-qty-control">
-                        <button class="btn-qty" onclick="updateQty(${item.id}, -1)">-</button>
+                        <button class="btn-qty" onclick="updateQty(${item.id}, -1)" aria-label="Remover 1">-</button>
                         <span style="font-weight:600; font-size:0.9rem; min-width:14px; text-align:center;">${item.quantity}</span>
-                        <button class="btn-qty" onclick="updateQty(${item.id}, 1)">+</button>
+                        <button class="btn-qty" onclick="updateQty(${item.id}, 1)" aria-label="Adicionar 1">+</button>
                     </div>
                 </div>
             `).join('');
@@ -1176,7 +876,7 @@
             document.getElementById('delivery-val').innerText = `${State.deliveryMethod === 'bike' ? '2.00' : '0.00'}€`;
             document.getElementById('total-val').innerText = `${totalFinal.toFixed(2)}€`;
             
-            lucide.createIcons();
+            lucide.createIcons({ root: container });
         }
 
         document.getElementById('btn-checkout').addEventListener('click', () => {
@@ -1190,9 +890,8 @@
             switchView('home');
         });
 
-
         /* ==========================================================================
-        9. DEFINIÇÕES, ALERGIAS E SUBSCRÇÃO PREMIUM
+        9. DEFINIÇÕES, ALERGIAS E SUBSCRIÇÃO PREMIUM
         ========================================================================== */
         function initSettingsListeners() {
             const premiumToggle = document.getElementById('premium-toggle');
@@ -1218,7 +917,6 @@
                 });
             });
 
-            // Listeners da opção de entrega
             document.querySelectorAll('input[name="deliveryMethod"]').forEach(radio => {
                 radio.addEventListener('change', (e) => {
                     State.deliveryMethod = e.target.value;
@@ -1239,13 +937,17 @@
             State.renderAll();
             lucide.createIcons();
             
-            // Fix eventual do mapa após surgir o container
-            setTimeout(() => { if (State.mapInstance) State.mapInstance.invalidateSize(); }, 300);
+            requestAnimationFrame(() => { 
+                if (State.mapInstance) State.mapInstance.invalidateSize(); 
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons(); // Carrega ícones apenas no login inicial
-            // initApp() é chamado após validação do login.
+            lucide.createIcons(); 
+            // Recuperação automática de sessão se existir
+            if (State.loggedUser) {
+                performLoginTransition(State.loggedUser);
+            }
         });
     </script>
 
