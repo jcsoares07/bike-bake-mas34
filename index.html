@@ -381,7 +381,7 @@
                 <div class="total-row"><span>Subtotal</span><span id="subtotal-val">0.00€</span></div>
                 <div class="total-row"><span>Taxa de Entrega</span><span id="delivery-val">0.00€</span></div>
                 <div class="total-row premium-discount" id="premium-delivery-row" style="display: none;">
-                    <span>Desconto Premium Entrega</span><span id="premium-delivery-discount-val">0.00€</span>
+                    <span>Entrega Premium</span><span id="premium-delivery-discount-val">Grátis</span>
                 </div>
                 <div class="total-row premium-discount" id="premium-extra-row" style="display: none;">
                     <span>Desconto Premium Extra (10%)</span><span id="premium-discount-val">-0.00€</span>
@@ -516,7 +516,7 @@
             { id: 2, name: "Confeitaria da Praça", type: "bakery", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=60", distance: 1.2, rating: 4.6, originalPrice: 3.50, salePrice: 1.50, pickupTime: "18:00 - 19:00", pickupPeriod: "evening", productName: "1 Croissant Brioche", isVegan: false, allergens: ["Glúten", "Lactose", "Frutos secos"], coords: [40.6400, -8.6550] },
             { id: 3, name: "Massa Mãe - Padaria", type: "bakery", image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop&q=60", distance: 0.8, rating: 4.9, originalPrice: 4.00, salePrice: 2.00, pickupTime: "10:30 - 12:00", pickupPeriod: "morning", productName: "1 Pão de Centeio Rústico", isVegan: true, allergens: ["Glúten"], coords: [40.6435, -8.6510] },
             { id: 4, name: "O Forno Verde Vegano", type: "pastry", image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400&auto=format&fit=crop&q=60", distance: 2.5, rating: 4.7, originalPrice: 5.50, salePrice: 2.50, pickupTime: "16:00 - 17:30", pickupPeriod: "afternoon", productName: "2 Muffins de Banana", isVegan: true, allergens: ["Glúten", "Frutos secos"], coords: [40.6385, -8.6580] },
-            { id: 5, name: "Ovos Moles Gourmet", type: "pastry", image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60", distance: 1.9, rating: 4.5, originalPrice: 6.00, salePrice: 3.00, pickupTime: "20:00 - 21:00", pickupPeriod: "evening", productName: "4 Ovos Moles de Aveiro", isVegan: false, allergens: ["Lactose"], coords: [40.6405, -8.6530] }
+            { id: 5, name: "Ovos Moles Gourmet", type: "pastry", image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60", distance: 1.9, rating: 4.5, originalPrice: 8.00, salePrice: 5.50, pickupTime: "20:00 - 21:00", pickupPeriod: "evening", productName: "4 Ovos Moles de Aveiro", isVegan: false, allergens: ["Lactose"], coords: [40.6405, -8.6530] }
         ];
 
         const State = {
@@ -527,7 +527,6 @@
             deliveryMethod: safeJSONParse('bb_delivery', 'pickup'),
             loggedUser: safeJSONParse('bb_user_session', null),
             accounts: safeJSONParse('bb_accounts', []),
-            // NOVO: Guarda as preferências de notificações e UI
             preferences: safeJSONParse('bb_prefs', { notifSurplus: true, notifOrders: true, radius: '5', theme: 'light' }), 
             homeFilters: { quick: 'all' },
             searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', vegan: false, glutenFree: false },
@@ -541,10 +540,22 @@
                 localStorage.setItem('bb_premium', JSON.stringify(this.isPremium));
                 localStorage.setItem('bb_allergens', JSON.stringify(this.activeAllergens));
                 localStorage.setItem('bb_delivery', JSON.stringify(this.deliveryMethod));
-                localStorage.setItem('bb_prefs', JSON.stringify(this.preferences)); // NOVO
+                localStorage.setItem('bb_prefs', JSON.stringify(this.preferences));
                 this.renderAll();
             },
-            // ... restante código do State (renderAll)
+
+            renderAll() {
+                renderStoresList();
+                renderSearchResults();
+                renderCartView();
+                renderCartBadge();
+                renderSettingsView();
+                
+                // Atualiza o mapa apenas se este for a vista atual
+                if (this.currentView === 'home' && this.activeSubView === 'map') {
+                    initOrUpdateMap();
+                }
+            }
         };
 
         /* ==========================================================================
@@ -676,10 +687,7 @@
                         const matchesProduct = store.productName.toLowerCase().includes(query);
                         if (!matchesName && !matchesProduct) return false;
                     }
-                    // Filtro de tempo original
                     if (State.searchFilters.pickupTime !== 'any' && store.pickupPeriod !== State.searchFilters.pickupTime) return false;
-                    
-                    // NOVAS REGRAS DE FILTRAGEM
                     if (State.searchFilters.type !== 'any' && store.type !== State.searchFilters.type) return false;
                     if (State.searchFilters.maxPrice !== 'any' && store.salePrice > parseFloat(State.searchFilters.maxPrice)) return false;
                     if (State.searchFilters.vegan && !store.isVegan) return false;
@@ -688,7 +696,6 @@
                 return true;
             });
             
-            // Lógica de ordenação consoante o filtro escolhido
             if (State.currentView === 'home' && State.homeFilters.quick === 'near') {
                 list.sort((a, b) => a.distance - b.distance);
             }
@@ -769,7 +776,6 @@
             State.mapMarkers = [];
 
             list.forEach(store => {
-                // PIN COM TAMANHO FIXO (FLEXBOX): Texto perfeitamente centrado.
                 const customIcon = L.divIcon({
                     className: 'custom-pin',
                     html: `<div style="background-color: #3E5A44; color: white; width: 60px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.85rem; box-sizing: border-box;">${store.salePrice.toFixed(2)}€</div>`,
@@ -777,13 +783,11 @@
                     iconAnchor: [30, 15]
                 });
 
-                // VISTA DETALHADA: Cruzamento de dados de alergénios e sanitização de HTML
                 const conflictAllergens = store.allergens.filter(allergy => State.activeAllergens.includes(allergy));
                 const hasAllergyWarning = conflictAllergens.length > 0;
                 const safeName = escapeHTML(store.name);
                 const safeProduct = escapeHTML(store.productName);
 
-                // Construção do layout detalhado para o popup do mapa
                 const popupContent = `
                     <div style="font-family: 'Plus Jakarta Sans', sans-serif; width: 210px; padding: 2px 0;">
                         <img src="${store.image}" alt="${safeName}" style="width: 100%; height: 95px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 8px;" onerror="this.src='https://via.placeholder.com/400x200?text=Imagem+Indisponível'">
@@ -833,10 +837,8 @@
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => { State.searchFilters.query = e.target.value; renderSearchResults(); });
         document.getElementById('adv-filter-trigger').addEventListener('click', () => { document.getElementById('adv-filters-box').classList.toggle('open'); });
-        // Listener original existente
         document.getElementById('filter-time').addEventListener('change', (e) => { State.searchFilters.pickupTime = e.target.value; renderSearchResults(); });
 
-        // NOVOS LISTENERS PARA OS FILTROS ADICIONADOS
         document.getElementById('filter-type').addEventListener('change', (e) => { 
             State.searchFilters.type = e.target.value; 
             renderSearchResults(); 
@@ -939,7 +941,13 @@
             const pExtraRow = document.getElementById('premium-extra-row');
 
             if (State.isPremium) {
-                if (State.deliveryMethod === 'bike') { pDeliveryRow.style.display = 'flex'; document.getElementById('premium-delivery-discount-val').innerText = `-2.00€`; deliveryFee = 0.00; } else { pDeliveryRow.style.display = 'none'; }
+                if (State.deliveryMethod === 'bike') { 
+                    pDeliveryRow.style.display = 'flex'; 
+                    document.getElementById('premium-delivery-discount-val').innerText = `Grátis`; 
+                    deliveryFee = 0.00; 
+                } else { 
+                    pDeliveryRow.style.display = 'none'; 
+                }
                 pExtraRow.style.display = 'flex'; premiumExtraDiscount = subtotal * 0.10;
                 document.getElementById('premium-discount-val').innerText = `-${premiumExtraDiscount.toFixed(2)}€`;
             } else { pDeliveryRow.style.display = 'none'; pExtraRow.style.display = 'none'; }
@@ -965,20 +973,16 @@
             const premiumToggle = document.getElementById('premium-toggle');
             premiumToggle.checked = State.isPremium;
 
-            // TOGGLE PREMIUM ROBUSTO (EVENTO 'CHANGE')
             premiumToggle.addEventListener('change', (e) => {
                 if (e.target.checked) {
-                    // Impede marcação imediata e apresenta modal
                     e.target.checked = false; 
                     document.getElementById('premium-modal').classList.add('active');
                 } else {
-                    // Fluxo de desativação
                     if (confirm('Tens a certeza que queres cancelar a tua subscrição Premium? Vais perder acesso aos descontos.')) {
                         State.isPremium = false;
                         State.save();
                         showToast('Subscrição cancelada.');
                     } else {
-                        // Se o utilizador não confirmar o cancelamento, reverte para ON
                         e.target.checked = true;
                     }
                 }
@@ -1009,15 +1013,11 @@
                 radio.addEventListener('change', (e) => { State.deliveryMethod = e.target.value; State.save(); });
             });
 
-            // INÍCIO DOS NOVOS LISTENERS DE DEFINIÇÕES
-    
-            // Carregar valores do State para a UI ao iniciar
             document.getElementById('notif-surplus').checked = State.preferences.notifSurplus;
             document.getElementById('notif-orders').checked = State.preferences.notifOrders;
             document.getElementById('setting-radius').value = State.preferences.radius;
             document.getElementById('setting-theme').value = State.preferences.theme;
 
-            // Atualizar State quando o utilizador muda opções
             document.getElementById('notif-surplus').addEventListener('change', (e) => {
                 State.preferences.notifSurplus = e.target.checked;
                 State.save();
