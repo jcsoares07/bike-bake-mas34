@@ -193,8 +193,8 @@
            ========================================================================== */
         .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
         .history-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
-        .star-rating i { cursor: pointer; color: #ccc; fill: transparent; width: 28px; height: 28px; transition: var(--transition); margin: 0 2px; }
-        .star-rating i.active { color: #FFB703; fill: #FFB703; }
+        .star-rating span { cursor: pointer; display: inline-block; margin: 0 4px; }
+        .star-rating svg { color: #ccc; fill: transparent; width: 32px; height: 32px; transition: var(--transition); }
         .review-box { background: #FDFBF7; padding: 12px; border-radius: var(--radius-sm); margin-top: 12px; font-size: 0.85rem; border: 1px dashed var(--border); }
 
         /* ==========================================================================
@@ -240,12 +240,12 @@
             <h3 style="color: var(--primary); margin-bottom: 8px;">Avaliar Pedido</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Como foram os excedentes que salvaste?</p>
             
-            <div class="star-rating" id="review-stars" style="margin-bottom: 12px;">
-                <i data-lucide="star" data-val="1"></i>
-                <i data-lucide="star" data-val="2"></i>
-                <i data-lucide="star" data-val="3"></i>
-                <i data-lucide="star" data-val="4"></i>
-                <i data-lucide="star" data-val="5"></i>
+            <div class="star-rating" id="review-stars" style="margin-bottom: 12px; display: flex; justify-content: center;">
+                <span data-val="1"><i data-lucide="star"></i></span>
+                <span data-val="2"><i data-lucide="star"></i></span>
+                <span data-val="3"><i data-lucide="star"></i></span>
+                <span data-val="4"><i data-lucide="star"></i></span>
+                <span data-val="5"><i data-lucide="star"></i></span>
             </div>
             
             <textarea id="review-text" class="search-input" placeholder="Conta-nos como foi... (Opcional)" style="width:100%; height:80px; resize:none; padding:12px;"></textarea>
@@ -1071,18 +1071,24 @@
         };
 
         function updateStarUI() {
-            document.querySelectorAll('#review-stars i').forEach(star => {
-                const val = parseInt(star.getAttribute('data-val'));
-                if (val <= currentReviewStars) {
-                    star.style.color = '#FFB703'; star.style.fill = '#FFB703';
-                } else {
-                    star.style.color = '#ccc'; star.style.fill = 'transparent';
+            document.querySelectorAll('#review-stars span').forEach(span => {
+                const val = parseInt(span.getAttribute('data-val'));
+                const svg = span.querySelector('svg'); // Procura o SVG gerado pela Lucide
+                
+                if (svg) {
+                    if (val <= currentReviewStars) {
+                        svg.style.color = '#FFB703'; 
+                        svg.style.fill = '#FFB703';
+                    } else {
+                        svg.style.color = '#ccc'; 
+                        svg.style.fill = 'transparent';
+                    }
                 }
             });
         }
 
-        document.querySelectorAll('#review-stars i').forEach(star => {
-            star.addEventListener('click', (e) => {
+        document.querySelectorAll('#review-stars span').forEach(span => {
+            span.addEventListener('click', (e) => {
                 currentReviewStars = parseInt(e.currentTarget.getAttribute('data-val'));
                 updateStarUI();
             });
