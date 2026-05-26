@@ -735,14 +735,49 @@
                     iconAnchor: [30, 15]
                 });
 
-                const marker = L.marker(store.coords, { icon: customIcon }).addTo(State.mapInstance);
+                // VISTA DETALHADA: Cruzamento de dados de alergénios e sanitização de HTML
+                const conflictAllergens = store.allergens.filter(allergy => State.activeAllergens.includes(allergy));
+                const hasAllergyWarning = conflictAllergens.length > 0;
+                const safeName = escapeHTML(store.name);
+                const safeProduct = escapeHTML(store.productName);
+
+                // Construção do layout detalhado para o popup do mapa
                 const popupContent = `
-                    <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width:140px;">
-                        <strong style="color: var(--text-main); font-size:0.9rem;">${escapeHTML(store.name)}</strong>
-                        <p style="margin:4px 0; font-size:0.75rem; color: var(--text-muted);">${escapeHTML(store.productName)}</p>
-                        <button onclick="addToCart(${store.id})" style="width:100%; background: var(--accent); color:white; border:none; padding:6px; border-radius:4px; font-weight:bold; font-size:0.75rem; cursor:pointer; margin-top:4px;">+ Adicionar</button>
+                    <div style="font-family: 'Plus Jakarta Sans', sans-serif; width: 210px; padding: 2px 0;">
+                        <img src="${store.image}" alt="${safeName}" style="width: 100%; height: 95px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 8px;" onerror="this.src='https://via.placeholder.com/400x200?text=Imagem+Indisponível'">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                            <strong style="color: var(--text-main); font-size: 0.95rem; line-height: 1.2; display: block; max-width: 75%;">${safeName}</strong>
+                            <div style="display: flex; align-items: center; gap: 2px; font-size: 0.8rem; font-weight: 600; color: var(--text-main);">
+                                <span style="color: #FFB703;">★</span><span>${store.rating}</span>
+                            </div>
+                        </div>
+                        
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">${safeProduct}</p>
+                        
+                        <div style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-bottom: 8px;">
+                            🕒 Recolha: ${store.pickupTime}
+                        </div>
+
+                        ${hasAllergyWarning ? `
+                            <div style="background: #FFEAE6; color: #C13515; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+                                ⚠️ Contém ${conflictAllergens.join(', ')}
+                            </div>
+                        ` : ''}
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 6px;">
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-size: 0.75rem; text-decoration: line-through; color: var(--text-muted); line-height: 1;">${store.originalPrice.toFixed(2)}€</span>
+                                <span style="font-size: 1.1rem; font-weight: 700; color: var(--accent); line-height: 1.1;">${store.salePrice.toFixed(2)}€</span>
+                            </div>
+                            <button onclick="addToCart(${store.id})" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: var(--transition);">
+                                + Sacola
+                            </button>
+                        </div>
                     </div>
                 `;
+
+                const marker = L.marker(store.coords, { icon: customIcon }).addTo(State.mapInstance);
                 marker.bindPopup(popupContent);
                 State.mapMarkers.push(marker);
             });
