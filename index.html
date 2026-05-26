@@ -328,7 +328,38 @@
                         <option value="evening">Noite (18h - 21h)</option>
                     </select>
                 </div>
+                
+                <div class="filter-group">
+                    <label for="filter-type">Tipo de Estabelecimento</label>
+                    <select id="filter-type" class="search-input" style="padding: 10px;">
+                        <option value="any">Qualquer tipo</option>
+                        <option value="bakery">Padaria</option>
+                        <option value="pastry">Pastelaria</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-price">Preço Máximo</label>
+                    <select id="filter-price" class="search-input" style="padding: 10px;">
+                        <option value="any">Qualquer preço</option>
+                        <option value="2">Até 2.00€</option>
+                        <option value="3">Até 3.00€</option>
+                        <option value="5">Até 5.00€</option>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="display: flex; gap: 16px; margin-top: 16px;">
+                    <label class="checkbox-label" style="margin-bottom: 0;">
+                        <input type="checkbox" id="filter-vegan">
+                        <span>Vegano</span>
+                    </label>
+                    <label class="checkbox-label" style="margin-bottom: 0;">
+                        <input type="checkbox" id="filter-gluten">
+                        <span>Sem Glúten</span>
+                    </label>
+                </div>
             </div>
+
             <div class="stores-grid" id="search-results-container"></div>
         </section>
 
@@ -451,7 +482,7 @@
             loggedUser: safeJSONParse('bb_user_session', null),
             accounts: safeJSONParse('bb_accounts', []),
             homeFilters: { quick: 'all' },
-            searchFilters: { query: '', pickupTime: 'any' },
+            searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', vegan: false, glutenFree: false },
             currentView: 'home', 
             activeSubView: 'list', 
             mapInstance: null,
@@ -603,7 +634,14 @@
                         const matchesProduct = store.productName.toLowerCase().includes(query);
                         if (!matchesName && !matchesProduct) return false;
                     }
+                    // Filtro de tempo original
                     if (State.searchFilters.pickupTime !== 'any' && store.pickupPeriod !== State.searchFilters.pickupTime) return false;
+                    
+                    // NOVAS REGRAS DE FILTRAGEM
+                    if (State.searchFilters.type !== 'any' && store.type !== State.searchFilters.type) return false;
+                    if (State.searchFilters.maxPrice !== 'any' && store.salePrice > parseFloat(State.searchFilters.maxPrice)) return false;
+                    if (State.searchFilters.vegan && !store.isVegan) return false;
+                    if (State.searchFilters.glutenFree && store.allergens.includes("Glúten")) return false;
                 }
                 return true;
             });
@@ -718,7 +756,29 @@
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => { State.searchFilters.query = e.target.value; renderSearchResults(); });
         document.getElementById('adv-filter-trigger').addEventListener('click', () => { document.getElementById('adv-filters-box').classList.toggle('open'); });
+        // Listener original existente
         document.getElementById('filter-time').addEventListener('change', (e) => { State.searchFilters.pickupTime = e.target.value; renderSearchResults(); });
+
+        // NOVOS LISTENERS PARA OS FILTROS ADICIONADOS
+        document.getElementById('filter-type').addEventListener('change', (e) => { 
+            State.searchFilters.type = e.target.value; 
+            renderSearchResults(); 
+        });
+
+        document.getElementById('filter-price').addEventListener('change', (e) => { 
+            State.searchFilters.maxPrice = e.target.value; 
+            renderSearchResults(); 
+        });
+
+        document.getElementById('filter-vegan').addEventListener('change', (e) => { 
+            State.searchFilters.vegan = e.target.checked; 
+            renderSearchResults(); 
+        });
+
+        document.getElementById('filter-gluten').addEventListener('change', (e) => { 
+            State.searchFilters.glutenFree = e.target.checked; 
+            renderSearchResults(); 
+        });
 
         function renderSearchResults() {
             const container = document.getElementById('search-results-container');
