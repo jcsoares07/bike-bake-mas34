@@ -418,12 +418,58 @@
                 <label class="checkbox-label"><input type="checkbox" class="allergy-checkbox" value="Frutos secos"><span>Contém Frutos Secos</span></label>
             </div>
 
-            <div class="settings-section" style="opacity: 0.7;">
-                <h3><i data-lucide="user" style="width:18px;"></i> Conta</h3>
-                <p style="font-size: 0.85rem;">Utilizador Atual</p>
+            <div class="settings-section">
+                <h3><i data-lucide="bell" style="width:18px;"></i> Notificações</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="font-size: 0.9rem;">Alertas de Novos Excedentes</span>
+                    <label class="switch">
+                        <input type="checkbox" id="notif-surplus" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.9rem;">Estado do Pedido (SMS)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="notif-orders" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3><i data-lucide="sliders" style="width:18px;"></i> Preferências de Descoberta</h3>
+                <div class="filter-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">Raio de Pesquisa (Distância Máxima)</label>
+                    <select id="setting-radius" class="search-input" style="padding: 10px; width: 100%;">
+                        <option value="2">Até 2 km</option>
+                        <option value="5" selected>Até 5 km</option>
+                        <option value="10">Até 10 km</option>
+                        <option value="20">Até 20 km</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block;">Tema da Aplicação</label>
+                    <select id="setting-theme" class="search-input" style="padding: 10px; width: 100%;">
+                        <option value="light">Claro</option>
+                        <option value="dark">Escuro (Em breve)</option>
+                        <option value="system">Automático (Sistema)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section" style="opacity: 0.9;">
+                <h3><i data-lucide="user" style="width:18px;"></i> A Minha Conta</h3>
                 <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold;" id="user-name-display"></p>
-                <p style="font-size: 0.85rem; color: var(--text-muted);" id="user-email-display">A carregar...</p>
-                <button id="btn-logout" style="margin-top: 12px; background: none; border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; cursor: pointer; color: var(--text-muted);">Terminar Sessão</button>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="user-email-display">A carregar...</p>
+                
+                <button onclick="showToast('Funcionalidade em desenvolvimento.')" style="width: 100%; background: #F0EDE6; border: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="history" style="width: 16px;"></i> Histórico de Pedidos
+                </button>
+                <button onclick="showToast('Redirecionar para métodos de pagamento...')" style="width: 100%; background: #F0EDE6; border: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i data-lucide="credit-card" style="width: 16px;"></i> Métodos de Pagamento
+                </button>
+
+                <button id="btn-logout" style="width: 100%; background: none; border: 1px solid var(--border); padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--accent);">Terminar Sessão</button>
             </div>
         </section>
 
@@ -481,6 +527,8 @@
             deliveryMethod: safeJSONParse('bb_delivery', 'pickup'),
             loggedUser: safeJSONParse('bb_user_session', null),
             accounts: safeJSONParse('bb_accounts', []),
+            // NOVO: Guarda as preferências de notificações e UI
+            preferences: safeJSONParse('bb_prefs', { notifSurplus: true, notifOrders: true, radius: '5', theme: 'light' }), 
             homeFilters: { quick: 'all' },
             searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', vegan: false, glutenFree: false },
             currentView: 'home', 
@@ -493,16 +541,10 @@
                 localStorage.setItem('bb_premium', JSON.stringify(this.isPremium));
                 localStorage.setItem('bb_allergens', JSON.stringify(this.activeAllergens));
                 localStorage.setItem('bb_delivery', JSON.stringify(this.deliveryMethod));
+                localStorage.setItem('bb_prefs', JSON.stringify(this.preferences)); // NOVO
                 this.renderAll();
             },
-
-            renderAll() {
-                renderCartBadge();
-                if (this.currentView === 'home' && this.activeSubView === 'list') renderStoresList();
-                if (this.currentView === 'search') renderSearchResults();
-                if (this.currentView === 'cart') renderCartView();
-                if (this.currentView === 'settings') renderSettingsView();
-            }
+            // ... restante código do State (renderAll)
         };
 
         /* ==========================================================================
@@ -965,6 +1007,38 @@
 
             document.querySelectorAll('input[name="deliveryMethod"]').forEach(radio => {
                 radio.addEventListener('change', (e) => { State.deliveryMethod = e.target.value; State.save(); });
+            });
+
+            // INÍCIO DOS NOVOS LISTENERS DE DEFINIÇÕES
+    
+            // Carregar valores do State para a UI ao iniciar
+            document.getElementById('notif-surplus').checked = State.preferences.notifSurplus;
+            document.getElementById('notif-orders').checked = State.preferences.notifOrders;
+            document.getElementById('setting-radius').value = State.preferences.radius;
+            document.getElementById('setting-theme').value = State.preferences.theme;
+
+            // Atualizar State quando o utilizador muda opções
+            document.getElementById('notif-surplus').addEventListener('change', (e) => {
+                State.preferences.notifSurplus = e.target.checked;
+                State.save();
+                if (e.target.checked) showToast('Notificações de excedentes ativadas.');
+            });
+
+            document.getElementById('notif-orders').addEventListener('change', (e) => {
+                State.preferences.notifOrders = e.target.checked;
+                State.save();
+            });
+
+            document.getElementById('setting-radius').addEventListener('change', (e) => {
+                State.preferences.radius = e.target.value;
+                State.save();
+                showToast(`Raio de descoberta atualizado para ${e.target.value}km.`);
+            });
+
+            document.getElementById('setting-theme').addEventListener('change', (e) => {
+                State.preferences.theme = e.target.value;
+                State.save();
+                showToast('O tema será aplicado no próximo início de sessão.');
             });
         }
 
