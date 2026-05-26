@@ -81,7 +81,7 @@
             text-decoration: underline; margin-top: 16px; display: inline-block;
         }
 
-        /* Modal Subscrição Premium */
+        /* Modais */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.5); z-index: 10000;
@@ -189,6 +189,15 @@
         .btn-checkout:hover { background: var(--accent-light); }
 
         /* ==========================================================================
+           HISTORY & REVIEWS
+           ========================================================================== */
+        .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+        .history-header { display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
+        .star-rating i { cursor: pointer; color: #ccc; fill: transparent; width: 28px; height: 28px; transition: var(--transition); margin: 0 2px; }
+        .star-rating i.active { color: #FFB703; fill: #FFB703; }
+        .review-box { background: #FDFBF7; padding: 12px; border-radius: var(--radius-sm); margin-top: 12px; font-size: 0.85rem; border: 1px dashed var(--border); }
+
+        /* ==========================================================================
            SETTINGS & PREMIUM
            ========================================================================== */
         .settings-section { background: var(--surface); border-radius: var(--radius-md); padding: 16px; border: 1px solid var(--border); margin-bottom: 16px; }
@@ -222,6 +231,28 @@
             <div class="modal-actions">
                 <button class="btn-outline" id="btn-cancel-premium">Cancelar</button>
                 <button class="btn-solid" id="btn-confirm-premium">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="review-modal">
+        <div class="modal-content">
+            <h3 style="color: var(--primary); margin-bottom: 8px;">Avaliar Pedido</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Como foram os excedentes que salvaste?</p>
+            
+            <div class="star-rating" id="review-stars" style="margin-bottom: 12px;">
+                <i data-lucide="star" data-val="1"></i>
+                <i data-lucide="star" data-val="2"></i>
+                <i data-lucide="star" data-val="3"></i>
+                <i data-lucide="star" data-val="4"></i>
+                <i data-lucide="star" data-val="5"></i>
+            </div>
+            
+            <textarea id="review-text" class="search-input" placeholder="Conta-nos como foi... (Opcional)" style="width:100%; height:80px; resize:none; padding:12px;"></textarea>
+            
+            <div class="modal-actions">
+                <button class="btn-outline" id="btn-cancel-review">Cancelar</button>
+                <button class="btn-solid" id="btn-submit-review">Enviar</button>
             </div>
         </div>
     </div>
@@ -391,6 +422,16 @@
             </div>
         </section>
 
+        <section id="view-history" class="view-content">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <button onclick="switchView('settings')" style="background:none; border:none; cursor:pointer; color:var(--text-main);" aria-label="Voltar para definições">
+                    <i data-lucide="arrow-left"></i>
+                </button>
+                <h2 style="font-size: 1.3rem;">Histórico de Pedidos</h2>
+            </div>
+            <div id="history-list-container"></div>
+        </section>
+
         <section id="view-settings" class="view-content">
             <div class="premium-card" style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -462,7 +503,7 @@
                 <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: bold;" id="user-name-display"></p>
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;" id="user-email-display">A carregar...</p>
                 
-                <button onclick="showToast('Funcionalidade em desenvolvimento.')" style="width: 100%; background: #F0EDE6; border: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <button onclick="switchView('history')" style="width: 100%; background: #F0EDE6; border: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <i data-lucide="history" style="width: 16px;"></i> Histórico de Pedidos
                 </button>
                 <button onclick="showToast('Redirecionar para métodos de pagamento...')" style="width: 100%; background: #F0EDE6; border: none; padding: 10px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 600; cursor: pointer; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -522,6 +563,7 @@
         const State = {
             stores: INITIAL_STORES,
             cart: safeJSONParse('bb_cart', []),
+            orderHistory: safeJSONParse('bb_orders', []), // NOVO: Armazena histórico
             isPremium: safeJSONParse('bb_premium', false),
             activeAllergens: safeJSONParse('bb_allergens', []),
             deliveryMethod: safeJSONParse('bb_delivery', 'pickup'),
@@ -537,6 +579,7 @@
 
             save() {
                 localStorage.setItem('bb_cart', JSON.stringify(this.cart));
+                localStorage.setItem('bb_orders', JSON.stringify(this.orderHistory)); // Salvar histórico
                 localStorage.setItem('bb_premium', JSON.stringify(this.isPremium));
                 localStorage.setItem('bb_allergens', JSON.stringify(this.activeAllergens));
                 localStorage.setItem('bb_delivery', JSON.stringify(this.deliveryMethod));
@@ -549,9 +592,9 @@
                 renderSearchResults();
                 renderCartView();
                 renderCartBadge();
+                renderHistoryView(); // NOVO: Renderiza as compras antigas
                 renderSettingsView();
                 
-                // Atualiza o mapa apenas se este for a vista atual
                 if (this.currentView === 'home' && this.activeSubView === 'map') {
                     initOrUpdateMap();
                 }
@@ -640,6 +683,7 @@
             document.getElementById('view-search').classList.remove('active');
             document.getElementById('view-cart').classList.remove('active');
             document.getElementById('view-settings').classList.remove('active');
+            document.getElementById('view-history').classList.remove('active'); // Ocultar nova secção
 
             const headerControls = document.getElementById('header-controls');
             headerControls.style.display = (viewName === 'home') ? 'flex' : 'none';
@@ -668,7 +712,7 @@
         }
 
         /* ==========================================================================
-        4. FILTRAGEM (DATA RENDERING COM NOVOS FILTROS)
+        4. FILTRAGEM E RENDERIZAÇÃO
         ========================================================================== */
         function getFilteredStores() {
             let list = State.stores.filter(store => {
@@ -760,7 +804,7 @@
         });
 
         /* ==========================================================================
-        5. MAP INTEGRATION (PINS OTIMIZADOS E CENTRADOS)
+        5. MAP INTEGRATION 
         ========================================================================== */
         function initOrUpdateMap() {
             const list = getFilteredStores();
@@ -783,40 +827,20 @@
                     iconAnchor: [30, 15]
                 });
 
-                const conflictAllergens = store.allergens.filter(allergy => State.activeAllergens.includes(allergy));
-                const hasAllergyWarning = conflictAllergens.length > 0;
                 const safeName = escapeHTML(store.name);
                 const safeProduct = escapeHTML(store.productName);
 
                 const popupContent = `
                     <div style="font-family: 'Plus Jakarta Sans', sans-serif; width: 210px; padding: 2px 0;">
-                        <img src="${store.image}" alt="${safeName}" style="width: 100%; height: 95px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 8px;" onerror="this.src='https://via.placeholder.com/400x200?text=Imagem+Indisponível'">
-                        
+                        <img src="${store.image}" alt="${safeName}" style="width: 100%; height: 95px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                            <strong style="color: var(--text-main); font-size: 0.95rem; line-height: 1.2; display: block; max-width: 75%;">${safeName}</strong>
-                            <div style="display: flex; align-items: center; gap: 2px; font-size: 0.8rem; font-weight: 600; color: var(--text-main);">
-                                <span style="color: #FFB703;">★</span><span>${store.rating}</span>
-                            </div>
+                            <strong style="color: var(--text-main); font-size: 0.95rem; line-height: 1.2;">${safeName}</strong>
+                            <span style="color: #FFB703; font-size: 0.8rem; font-weight: 600;">★ ${store.rating}</span>
                         </div>
-                        
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">${safeProduct}</p>
-                        
-                        <div style="font-size: 0.75rem; color: var(--primary); font-weight: 600; margin-bottom: 8px;">
-                            🕒 Recolha: ${store.pickupTime}
-                        </div>
-
-                        ${hasAllergyWarning ? `
-                            <div style="background: #FFEAE6; color: #C13515; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.7rem; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
-                                ⚠️ Contém ${conflictAllergens.join(', ')}
-                            </div>
-                        ` : ''}
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 6px;">
-                            <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 0.75rem; text-decoration: line-through; color: var(--text-muted); line-height: 1;">${store.originalPrice.toFixed(2)}€</span>
-                                <span style="font-size: 1.1rem; font-weight: 700; color: var(--accent); line-height: 1.1;">${store.salePrice.toFixed(2)}€</span>
-                            </div>
-                            <button onclick="addToCart(${store.id})" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: var(--transition);">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">${safeProduct}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px;">
+                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--accent);">${store.salePrice.toFixed(2)}€</span>
+                            <button onclick="addToCart(${store.id})" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.8rem; cursor: pointer;">
                                 + Sacola
                             </button>
                         </div>
@@ -827,7 +851,6 @@
                 marker.bindPopup(popupContent);
                 State.mapMarkers.push(marker);
             });
-
             requestAnimationFrame(() => { if (State.mapInstance) State.mapInstance.invalidateSize(); });
         }
 
@@ -837,51 +860,42 @@
         const searchInput = document.getElementById('search-input');
         searchInput.addEventListener('input', (e) => { State.searchFilters.query = e.target.value; renderSearchResults(); });
         document.getElementById('adv-filter-trigger').addEventListener('click', () => { document.getElementById('adv-filters-box').classList.toggle('open'); });
-        document.getElementById('filter-time').addEventListener('change', (e) => { State.searchFilters.pickupTime = e.target.value; renderSearchResults(); });
-
-        document.getElementById('filter-type').addEventListener('change', (e) => { 
-            State.searchFilters.type = e.target.value; 
-            renderSearchResults(); 
+        
+        ['time', 'type', 'price'].forEach(filter => {
+            document.getElementById(`filter-${filter}`).addEventListener('change', (e) => {
+                const mapKey = { time: 'pickupTime', type: 'type', price: 'maxPrice' };
+                State.searchFilters[mapKey[filter]] = e.target.value;
+                renderSearchResults();
+            });
         });
 
-        document.getElementById('filter-price').addEventListener('change', (e) => { 
-            State.searchFilters.maxPrice = e.target.value; 
-            renderSearchResults(); 
-        });
-
-        document.getElementById('filter-vegan').addEventListener('change', (e) => { 
-            State.searchFilters.vegan = e.target.checked; 
-            renderSearchResults(); 
-        });
-
-        document.getElementById('filter-gluten').addEventListener('change', (e) => { 
-            State.searchFilters.glutenFree = e.target.checked; 
-            renderSearchResults(); 
+        ['vegan', 'gluten'].forEach(filter => {
+            document.getElementById(`filter-${filter}`).addEventListener('change', (e) => {
+                const mapKey = { vegan: 'vegan', gluten: 'glutenFree' };
+                State.searchFilters[mapKey[filter]] = e.target.checked;
+                renderSearchResults();
+            });
         });
 
         function renderSearchResults() {
             const container = document.getElementById('search-results-container');
             const results = getFilteredStores();
-
             if (State.searchFilters.query === '' && State.searchFilters.pickupTime === 'any') {
                 container.innerHTML = `<div class="empty-state"><i data-lucide="search"></i><p>Procura petiscos ou padarias perto de ti.</p></div>`;
             } else if (results.length === 0) {
                 container.innerHTML = `<div class="empty-state"><i data-lucide="frown"></i><p>Sem correspondências para a tua pesquisa.</p></div>`;
-            } else {
-                container.innerHTML = results.map(store => buildStoreCardHTML(store)).join('');
-            }
+            } else { container.innerHTML = results.map(store => buildStoreCardHTML(store)).join(''); }
             lucide.createIcons({ root: container });
         }
 
         /* ==========================================================================
-        7. GESTÃO DE SACOLA
+        7. GESTÃO DE SACOLA E CHECKOUT
         ========================================================================== */
         window.addToCart = function(storeId) {
             const store = State.stores.find(s => s.id === storeId);
             const cartItem = State.cart.find(item => item.id === storeId);
             if (cartItem) cartItem.quantity += 1;
             else State.cart.push({ id: store.id, name: store.name, productName: store.productName, price: store.salePrice, image: store.image, quantity: 1 });
-            
             showToast(`Adicionado à sacola: ${store.name}`);
             const navBag = document.querySelector('[data-target="cart"]');
             navBag.style.transform = 'scale(1.15)';
@@ -901,6 +915,22 @@
             const badge = document.getElementById('cart-count');
             const totalItems = State.cart.reduce((acc, curr) => acc + curr.quantity, 0);
             if (totalItems > 0) { badge.innerText = totalItems; badge.style.display = 'block'; } else { badge.style.display = 'none'; }
+        }
+
+        function calculateCartTotals() {
+            let subtotal = State.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            let deliveryFee = State.deliveryMethod === 'bike' ? 2.00 : 0.00;
+            let premiumExtraDiscount = 0.00;
+
+            if (State.isPremium) {
+                if (State.deliveryMethod === 'bike') deliveryFee = 0.00;
+                premiumExtraDiscount = subtotal * 0.10;
+            }
+
+            let totalFinal = (subtotal + deliveryFee) - premiumExtraDiscount;
+            if(totalFinal < 0) totalFinal = 0; 
+
+            return { subtotal, deliveryFee, premiumExtraDiscount, totalFinal };
         }
 
         function renderCartView() {
@@ -934,40 +964,154 @@
                 </div>
             `).join('');
 
-            let subtotal = State.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            let deliveryFee = State.deliveryMethod === 'bike' ? 2.00 : 0.00;
-            let premiumExtraDiscount = 0.00;
-            const pDeliveryRow = document.getElementById('premium-delivery-row');
-            const pExtraRow = document.getElementById('premium-extra-row');
+            const totals = calculateCartTotals();
+            document.getElementById('subtotal-val').innerText = `${totals.subtotal.toFixed(2)}€`;
+            document.getElementById('delivery-val').innerText = `${State.deliveryMethod === 'bike' ? '2.00' : '0.00'}€`;
+            document.getElementById('total-val').innerText = `${totals.totalFinal.toFixed(2)}€`;
 
             if (State.isPremium) {
-                if (State.deliveryMethod === 'bike') { 
-                    pDeliveryRow.style.display = 'flex'; 
-                    document.getElementById('premium-delivery-discount-val').innerText = `Grátis`; 
-                    deliveryFee = 0.00; 
-                } else { 
-                    pDeliveryRow.style.display = 'none'; 
+                if (State.deliveryMethod === 'bike') {
+                    document.getElementById('premium-delivery-row').style.display = 'flex';
+                } else {
+                    document.getElementById('premium-delivery-row').style.display = 'none';
                 }
-                pExtraRow.style.display = 'flex'; premiumExtraDiscount = subtotal * 0.10;
-                document.getElementById('premium-discount-val').innerText = `-${premiumExtraDiscount.toFixed(2)}€`;
-            } else { pDeliveryRow.style.display = 'none'; pExtraRow.style.display = 'none'; }
-
-            let totalFinal = (subtotal + deliveryFee) - premiumExtraDiscount;
-            if(totalFinal < 0) totalFinal = 0; 
-
-            document.getElementById('subtotal-val').innerText = `${subtotal.toFixed(2)}€`;
-            document.getElementById('delivery-val').innerText = `${State.deliveryMethod === 'bike' ? '2.00' : '0.00'}€`;
-            document.getElementById('total-val').innerText = `${totalFinal.toFixed(2)}€`;
+                document.getElementById('premium-extra-row').style.display = 'flex';
+                document.getElementById('premium-discount-val').innerText = `-${totals.premiumExtraDiscount.toFixed(2)}€`;
+            } else {
+                document.getElementById('premium-delivery-row').style.display = 'none';
+                document.getElementById('premium-extra-row').style.display = 'none';
+            }
             lucide.createIcons({ root: container });
         }
 
         document.getElementById('btn-checkout').addEventListener('click', () => {
+            const totals = calculateCartTotals();
+            
+            // Adicionar à lista do Histórico
+            const newOrder = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                items: [...State.cart],
+                total: totals.totalFinal,
+                method: State.deliveryMethod,
+                review: null // Ainda não avaliado
+            };
+            State.orderHistory.push(newOrder);
+
             alert(State.deliveryMethod === 'bike' ? "🎉 Pedido efetuado! O estafeta de bicicleta vai realizar a entrega." : "🎉 Pedido efetuado! Já te podes deslocar para a recolha.");
-            State.cart = []; State.save(); switchView('home');
+            
+            State.cart = []; 
+            State.save(); 
+            switchView('history'); // Leva o utilizador logo para o Histórico após checkout
         });
 
         /* ==========================================================================
-        8. DEFINIÇÕES, ALERGIAS E SUBSCRIÇÃO PREMIUM
+        8. SISTEMA DE HISTÓRICO E REVIEWS
+        ========================================================================== */
+        let currentReviewOrderId = null;
+        let currentReviewStars = 0;
+
+        function renderHistoryView() {
+            const container = document.getElementById('history-list-container');
+            if (State.orderHistory.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i data-lucide="clock"></i><p>Ainda não tens pedidos anteriores.</p></div>`;
+                lucide.createIcons({ root: container });
+                return;
+            }
+
+            container.innerHTML = State.orderHistory.slice().reverse().map(order => {
+                const dateStr = new Date(order.date).toLocaleDateString('pt-PT', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                
+                let itemsHtml = order.items.map(i => `
+                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-top:4px;">
+                        <span style="color:var(--text-muted);">${i.quantity}x ${escapeHTML(i.name)}</span>
+                        <span style="font-weight:600;">${(i.price * i.quantity).toFixed(2)}€</span>
+                    </div>
+                `).join('');
+
+                let reviewHtml = '';
+                if (order.review) {
+                    let stars = '';
+                    for(let i=1; i<=5; i++) {
+                        stars += `<i data-lucide="star" style="width:14px; height:14px; color:#FFB703; fill:${i<=order.review.rating ? '#FFB703' : 'transparent'}; margin-right:2px;"></i>`;
+                    }
+                    reviewHtml = `
+                        <div class="review-box">
+                            <div style="display:flex; margin-bottom:4px;">${stars}</div>
+                            <p style="color:var(--text-main); font-style:italic;">"${escapeHTML(order.review.comment)}"</p>
+                        </div>
+                    `;
+                } else {
+                    reviewHtml = `<button class="btn-outline" style="width:100%; margin-top:12px; padding:8px; font-size:0.85rem;" onclick="openReviewModal(${order.id})">Deixar Avaliação</button>`;
+                }
+
+                return `
+                    <div class="history-card">
+                        <div class="history-header">
+                            <span style="font-size:0.85rem; font-weight:600; color:var(--text-main);">${dateStr}</span>
+                            <strong style="color:var(--primary); font-size:1.1rem;">${order.total.toFixed(2)}€</strong>
+                        </div>
+                        ${itemsHtml}
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:12px; border-top:1px solid var(--border); padding-top:8px;">
+                            Entrega: <strong>${order.method === 'bike' ? 'Por Bicicleta' : 'Recolha no Local'}</strong>
+                        </div>
+                        ${reviewHtml}
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons({ root: container });
+        }
+
+        window.openReviewModal = function(orderId) {
+            currentReviewOrderId = orderId;
+            currentReviewStars = 0;
+            document.getElementById('review-text').value = '';
+            updateStarUI();
+            document.getElementById('review-modal').classList.add('active');
+        };
+
+        function updateStarUI() {
+            document.querySelectorAll('#review-stars i').forEach(star => {
+                const val = parseInt(star.getAttribute('data-val'));
+                if (val <= currentReviewStars) {
+                    star.style.color = '#FFB703'; star.style.fill = '#FFB703';
+                } else {
+                    star.style.color = '#ccc'; star.style.fill = 'transparent';
+                }
+            });
+        }
+
+        document.querySelectorAll('#review-stars i').forEach(star => {
+            star.addEventListener('click', (e) => {
+                currentReviewStars = parseInt(e.currentTarget.getAttribute('data-val'));
+                updateStarUI();
+            });
+        });
+
+        document.getElementById('btn-cancel-review').addEventListener('click', () => {
+            document.getElementById('review-modal').classList.remove('active');
+        });
+
+        document.getElementById('btn-submit-review').addEventListener('click', () => {
+            if(currentReviewStars === 0) {
+                showToast('Por favor, seleciona pelo menos uma estrela para avaliar.');
+                return;
+            }
+            const comment = document.getElementById('review-text').value.trim();
+            const orderIndex = State.orderHistory.findIndex(o => o.id === currentReviewOrderId);
+            if(orderIndex !== -1) {
+                State.orderHistory[orderIndex].review = {
+                    rating: currentReviewStars,
+                    comment: comment || 'Avaliado sem comentário escrito.'
+                };
+                State.save();
+                showToast('Obrigado pela tua avaliação!');
+                document.getElementById('review-modal').classList.remove('active');
+            }
+        });
+
+        /* ==========================================================================
+        9. DEFINIÇÕES, ALERGIAS E SUBSCRIÇÃO PREMIUM
         ========================================================================== */
         function initSettingsListeners() {
             const premiumToggle = document.getElementById('premium-toggle');
@@ -982,22 +1126,17 @@
                         State.isPremium = false;
                         State.save();
                         showToast('Subscrição cancelada.');
-                    } else {
-                        e.target.checked = true;
-                    }
+                    } else { e.target.checked = true; }
                 }
             });
 
-            document.getElementById('btn-cancel-premium').addEventListener('click', () => {
-                document.getElementById('premium-modal').classList.remove('active');
-            });
-
+            document.getElementById('btn-cancel-premium').addEventListener('click', () => { document.getElementById('premium-modal').classList.remove('active'); });
             document.getElementById('btn-confirm-premium').addEventListener('click', () => {
                 State.isPremium = true;
                 document.getElementById('premium-toggle').checked = true;
                 State.save();
                 document.getElementById('premium-modal').classList.remove('active');
-                showToast('Bem-vindo ao Premium! 🎉 A partir de agora tens descontos nas tuas sacolas.');
+                showToast('Bem-vindo ao Premium! 🎉');
             });
 
             document.querySelectorAll('.allergy-checkbox').forEach(cb => {
@@ -1018,34 +1157,16 @@
             document.getElementById('setting-radius').value = State.preferences.radius;
             document.getElementById('setting-theme').value = State.preferences.theme;
 
-            document.getElementById('notif-surplus').addEventListener('change', (e) => {
-                State.preferences.notifSurplus = e.target.checked;
-                State.save();
-                if (e.target.checked) showToast('Notificações de excedentes ativadas.');
-            });
-
-            document.getElementById('notif-orders').addEventListener('change', (e) => {
-                State.preferences.notifOrders = e.target.checked;
-                State.save();
-            });
-
-            document.getElementById('setting-radius').addEventListener('change', (e) => {
-                State.preferences.radius = e.target.value;
-                State.save();
-                showToast(`Raio de descoberta atualizado para ${e.target.value}km.`);
-            });
-
-            document.getElementById('setting-theme').addEventListener('change', (e) => {
-                State.preferences.theme = e.target.value;
-                State.save();
-                showToast('O tema será aplicado no próximo início de sessão.');
-            });
+            document.getElementById('notif-surplus').addEventListener('change', (e) => { State.preferences.notifSurplus = e.target.checked; State.save(); });
+            document.getElementById('notif-orders').addEventListener('change', (e) => { State.preferences.notifOrders = e.target.checked; State.save(); });
+            document.getElementById('setting-radius').addEventListener('change', (e) => { State.preferences.radius = e.target.value; State.save(); });
+            document.getElementById('setting-theme').addEventListener('change', (e) => { State.preferences.theme = e.target.value; State.save(); });
         }
 
         function renderSettingsView() { document.getElementById('premium-toggle').checked = State.isPremium; }
 
         /* ==========================================================================
-        9. INICIALIZAÇÃO E BOOTSTRAP
+        10. INICIALIZAÇÃO E BOOTSTRAP
         ========================================================================== */
         function initApp() {
             initSettingsListeners();
@@ -1056,9 +1177,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons(); 
-            if (State.loggedUser) {
-                performLoginTransition(State.loggedUser);
-            }
+            if (State.loggedUser) { performLoginTransition(State.loggedUser); }
         });
     </script>
 </body>
