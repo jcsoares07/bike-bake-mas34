@@ -295,9 +295,12 @@
             <div class="scroll-filters">
                 <button class="filter-chip active" data-filter="all">Todos</button>
                 <button class="filter-chip" data-filter="near">Mais Próximos</button>
+                <button class="filter-chip" data-filter="topRated">Top Avaliados</button>
                 <button class="filter-chip" data-filter="price">Preço < 5€</button>
                 <button class="filter-chip" data-filter="vegan">Vegano</button>
+                <button class="filter-chip" data-filter="glutenFree">Sem Glúten</button>
                 <button class="filter-chip" data-filter="bakery">Apenas Padaria</button>
+                <button class="filter-chip" data-filter="pastry">Pastelaria</button>
             </div>
             <div class="stores-grid" id="stores-list-container"></div>
         </main>
@@ -474,7 +477,6 @@
         /* ==========================================================================
         2. SISTEMA DE AUTENTICAÇÃO E REGISTO REAL
         ========================================================================== */
-        // Alternar entre formulários
         document.getElementById('go-to-register').addEventListener('click', () => {
             document.getElementById('form-login').classList.add('hidden');
             document.getElementById('form-register').classList.remove('hidden');
@@ -492,7 +494,6 @@
             initApp();
         }
 
-        // Criar Conta
         document.getElementById('btn-register').addEventListener('click', () => {
             const name = document.getElementById('reg-name').value.trim();
             const email = document.getElementById('reg-email').value.trim();
@@ -518,7 +519,6 @@
             performLoginTransition(newUser);
         });
 
-        // Iniciar Sessão com Validação Rigorosa
         document.getElementById('btn-login').addEventListener('click', () => {
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-pass').value;
@@ -584,7 +584,7 @@
         }
 
         /* ==========================================================================
-        4. FILTRAGEM (DATA RENDERING)
+        4. FILTRAGEM (DATA RENDERING COM NOVOS FILTROS)
         ========================================================================== */
         function getFilteredStores() {
             let list = State.stores.filter(store => {
@@ -592,6 +592,9 @@
                     if (State.homeFilters.quick === 'price' && store.salePrice >= 5.00) return false;
                     if (State.homeFilters.quick === 'vegan' && !store.isVegan) return false;
                     if (State.homeFilters.quick === 'bakery' && store.type !== 'bakery') return false;
+                    if (State.homeFilters.quick === 'pastry' && store.type !== 'pastry') return false;
+                    if (State.homeFilters.quick === 'topRated' && store.rating < 4.7) return false;
+                    if (State.homeFilters.quick === 'glutenFree' && store.allergens.includes("Glúten")) return false;
                 }
                 if (State.currentView === 'search') {
                     if (State.searchFilters.query) {
@@ -604,8 +607,13 @@
                 }
                 return true;
             });
+            
+            // Lógica de ordenação consoante o filtro escolhido
             if (State.currentView === 'home' && State.homeFilters.quick === 'near') {
                 list.sort((a, b) => a.distance - b.distance);
+            }
+            if (State.currentView === 'home' && State.homeFilters.quick === 'topRated') {
+                list.sort((a, b) => b.rating - a.rating);
             }
             return list;
         }
@@ -665,7 +673,7 @@
         });
 
         /* ==========================================================================
-        5. MAP INTEGRATION (Otimização Ícone)
+        5. MAP INTEGRATION (PINS OTIMIZADOS E CENTRADOS)
         ========================================================================== */
         function initOrUpdateMap() {
             const list = getFilteredStores();
@@ -681,12 +689,12 @@
             State.mapMarkers = [];
 
             list.forEach(store => {
-                // PIN SEM EMOJI: Padding e tamanhos otimizados para não vazar do contentor
+                // PIN COM TAMANHO FIXO (FLEXBOX): Texto perfeitamente centrado.
                 const customIcon = L.divIcon({
                     className: 'custom-pin',
-                    html: `<div style="background-color: #3E5A44; color: white; padding: 4px 8px; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size:0.8rem; text-align:center; min-width: 45px; white-space: nowrap;">${store.salePrice.toFixed(2)}€</div>`,
-                    iconSize: [50, 26],
-                    iconAnchor: [25, 13]
+                    html: `<div style="background-color: #3E5A44; color: white; width: 60px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 20px; font-weight: bold; border: 2px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 0.85rem; box-sizing: border-box;">${store.salePrice.toFixed(2)}€</div>`,
+                    iconSize: [60, 30],
+                    iconAnchor: [30, 15]
                 });
 
                 const marker = L.marker(store.coords, { icon: customIcon }).addTo(State.mapInstance);
@@ -814,31 +822,31 @@
         });
 
         /* ==========================================================================
-        8. DEFINIÇÕES, ALERGIAS E SUBSCRIÇÃO PREMIUM (FUNCIONAL)
+        8. DEFINIÇÕES, ALERGIAS E SUBSCRIÇÃO PREMIUM
         ========================================================================== */
         function initSettingsListeners() {
             const premiumToggle = document.getElementById('premium-toggle');
             premiumToggle.checked = State.isPremium;
 
-            // SUBSCRIÇÃO FUNCIONAL COM MODAL
-            premiumToggle.addEventListener('click', (e) => {
-                e.preventDefault(); // Impede o clique visual imediato de ativar
-                
-                if (!State.isPremium) {
-                    // Mostrar modal de subscrição
+            // TOGGLE PREMIUM ROBUSTO (EVENTO 'CHANGE')
+            premiumToggle.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    // Impede marcação imediata e apresenta modal
+                    e.target.checked = false; 
                     document.getElementById('premium-modal').classList.add('active');
                 } else {
-                    // Confirmação para desativar subscrição
+                    // Fluxo de desativação
                     if (confirm('Tens a certeza que queres cancelar a tua subscrição Premium? Vais perder acesso aos descontos.')) {
                         State.isPremium = false;
-                        premiumToggle.checked = false;
                         State.save();
                         showToast('Subscrição cancelada.');
+                    } else {
+                        // Se o utilizador não confirmar o cancelamento, reverte para ON
+                        e.target.checked = true;
                     }
                 }
             });
 
-            // Ações do Modal Premium
             document.getElementById('btn-cancel-premium').addEventListener('click', () => {
                 document.getElementById('premium-modal').classList.remove('active');
             });
@@ -851,7 +859,6 @@
                 showToast('Bem-vindo ao Premium! 🎉 A partir de agora tens descontos nas tuas sacolas.');
             });
 
-            // Alergias
             document.querySelectorAll('.allergy-checkbox').forEach(cb => {
                 if (State.activeAllergens.includes(cb.value)) cb.checked = true;
                 cb.addEventListener('change', () => {
@@ -880,7 +887,6 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons(); 
-            // Recuperação automática de sessão se existir utilizador ativo guardado
             if (State.loggedUser) {
                 performLoginTransition(State.loggedUser);
             }
