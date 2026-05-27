@@ -112,7 +112,11 @@ document.getElementById('btn-register').addEventListener('click', () => {
         return;
     }
 
-    const newUser = { name, email, pass };
+    // NOVO: Capturar as alergias selecionadas
+    const selectedAllergies = Array.from(document.querySelectorAll('.reg-allergy:checked')).map(cb => cb.value);
+
+    // NOVO: Incluir as alergias ('allergies') no objeto do utilizador
+    const newUser = { name, email, pass, allergies: selectedAllergies };
     State.accounts.push(newUser);
     localStorage.setItem('bb_accounts', JSON.stringify(State.accounts));
     
@@ -192,6 +196,16 @@ function toggleMainSubView(subView) {
 ========================================================================== */
 function getFilteredStores() {
     let list = State.stores.filter(store => {
+        
+        // NOVO: Exclusão automática baseada nas alergias do utilizador logado
+        if (State.loggedUser && State.loggedUser.allergies && State.loggedUser.allergies.length > 0) {
+            if (store.allergens && store.allergens.length > 0) {
+                // Se algum alergénico do produto estiver na lista de alergias do utilizador, exclui o produto
+                const hasAllergy = store.allergens.some(allergen => State.loggedUser.allergies.includes(allergen));
+                if (hasAllergy) return false;
+            }
+        }
+
         if (State.currentView === 'home' || State.activeSubView === 'map') {
             if (State.homeFilters.quick === 'price' && store.salePrice >= 5.00) return false;
             if (State.homeFilters.quick === 'vegan' && !store.isVegan) return false;
