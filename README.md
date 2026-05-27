@@ -1,2 +1,2 @@
-# bike-bake
-demo da app Bike&amp;Bake para a entrega final do projeto de MAS.
+# Bike&Bake
+demo da app Bike&Bake para a entrega final do projeto de MAS.
