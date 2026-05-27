@@ -107,8 +107,28 @@ document.getElementById('btn-register').addEventListener('click', () => {
         return;
     }
 
+    // Dentro do Listener do btn-register, substitui a verificação antiga por esta:
     if (State.accounts.some(a => a.email === email)) {
-        showToast('Este email já está associado a uma conta.'); 
+        // Apresenta a mensagem solicitada e pergunta se deseja alterar a palavra-passe
+        if (confirm('Email já registado. Deseja alterar a palavra-passe?')) {
+            const newPass = prompt('Introduza a nova palavra-passe (mín. 4 caracteres):');
+            
+            if (newPass && newPass.length >= 4) {
+                // Encontra a conta correspondente e atualiza a password
+                const account = State.accounts.find(a => a.email === email);
+                if (account) {
+                    account.pass = newPass;
+                    localStorage.setItem('bb_accounts', JSON.stringify(State.accounts));
+                    showToast('Palavra-passe alterada com sucesso! Já pode iniciar sessão.');
+                    
+                    // Redireciona o utilizador para o formulário de login
+                    document.getElementById('form-register').classList.add('hidden');
+                    document.getElementById('form-login').classList.remove('hidden');
+                }
+            } else if (newPass) {
+                showToast('Operação cancelada: A nova palavra-passe deve ter pelo menos 4 caracteres.');
+            }
+        }
         return;
     }
 
