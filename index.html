@@ -97,13 +97,13 @@
         .btn-outline { background: transparent; border: 1px solid var(--border); padding: 12px; border-radius: var(--radius-md); flex: 1; cursor: pointer; font-weight: 600; }
         .btn-solid { background: var(--accent); color: white; border: none; padding: 12px; border-radius: var(--radius-md); flex: 1; cursor: pointer; font-weight: 600; }
 
-        /* Toast Feedback */
+        /* Toast Feedback - Z-INDEX CORRIGIDO PARA APARECER NO LOGIN */
         #toast {
             position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
             background-color: var(--text-main); color: white; padding: 12px 20px;
             border-radius: var(--radius-lg); font-size: 0.85rem; font-weight: 600;
             opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10001; /* <-- ALTERADO DE 2000 PARA 10001 */
+            z-index: 10001; 
             box-shadow: var(--shadow-lg); white-space: nowrap;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -154,7 +154,6 @@
         .store-card { background: var(--surface); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: var(--transition); position: relative; }
         .store-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         
-        /* Modificações de layout para compactar os cartões */
         .card-image-wrapper { position: relative; height: 110px; background: #E9E6E0; }
         .card-img { width: 100%; height: 100%; object-fit: cover; }
         .time-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(38, 70, 83, 0.85); color: white; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; }
@@ -580,6 +579,7 @@
             accounts: safeJSONParse('bb_accounts', []),
             preferences: safeJSONParse('bb_prefs', { notifSurplus: true, notifOrders: true, radius: '5', theme: 'light' }), 
             homeFilters: { quick: 'all' },
+            // NOVO: 'category' adicionado corretamente ao objeto inicial
             searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', category: 'any', vegan: false, glutenFree: false },
             currentView: 'home', 
             activeSubView: 'list', 
@@ -635,13 +635,11 @@
             const pass = document.getElementById('reg-pass').value;
 
             if (name.length < 2 || !email.includes('@') || pass.length < 4) {
-                // Substituído alert por showToast
                 showToast('Por favor, preenche todos os campos corretamente (a password requer mín. 4 caracteres).'); 
                 return;
             }
 
             if (State.accounts.some(a => a.email === email)) {
-                // Substituído alert por showToast
                 showToast('Este email já está associado a uma conta.'); 
                 return;
             }
@@ -667,7 +665,6 @@
                 State.loggedUser = matchedUser;
                 performLoginTransition(matchedUser);
             } else {
-                // Substituído alert por showToast
                 showToast('Credenciais inválidas. Verifica o email e a palavra-passe, ou cria uma conta nova.');
             }
         });
@@ -733,7 +730,7 @@
                     if (State.homeFilters.quick === 'bakery' && store.type !== 'bakery') return false;
                     if (State.homeFilters.quick === 'pastry' && store.type !== 'pastry') return false;
                     if (State.homeFilters.quick === 'topRated' && store.rating < 4.7) return false;
-                    if (State.homeFilters.quick === 'glutenFree' && store.allergens.includes("Glúten")) return false;
+                    if (State.homeFilters.quick === 'glutenFree' && store.allergens && store.allergens.includes("Glúten")) return false;
                 }
                 if (State.currentView === 'search') {
                     if (State.searchFilters.query) {
@@ -746,11 +743,11 @@
                     if (State.searchFilters.type !== 'any' && store.type !== State.searchFilters.type) return false;
                     if (State.searchFilters.maxPrice !== 'any' && store.salePrice > parseFloat(State.searchFilters.maxPrice)) return false;
                     
-                    // NOVA LINHA PARA A CATEGORIA:
-                    if (State.searchFilters.category !== 'any' && store.category !== State.searchFilters.category) return false;
+                    // Lógica para filtrar corretamente a Categoria
+                    if (State.searchFilters.category && State.searchFilters.category !== 'any' && store.category !== State.searchFilters.category) return false;
 
                     if (State.searchFilters.vegan && !store.isVegan) return false;
-                    if (State.searchFilters.glutenFree && store.allergens.includes("Glúten")) return false;
+                    if (State.searchFilters.glutenFree && store.allergens && store.allergens.includes("Glúten")) return false;
                 }
                 return true;
             });
@@ -768,7 +765,6 @@
             const safeName = escapeHTML(store.name);
             const safeProduct = escapeHTML(store.productName);
         
-            // Nova secção para mostrar os alergénios como tags compactas
             const allergensTags = store.allergens && store.allergens.length > 0 
                 ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
                     ${store.allergens.map(a => `<span style="background: #F0EDE6; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">${escapeHTML(a)}</span>`).join('')}
@@ -850,14 +846,12 @@
                 const safeName = escapeHTML(store.name);
                 const safeProduct = escapeHTML(store.productName);
 
-                // Nova secção para gerar as tags dos alergénios para o mapa
                 const allergensTags = store.allergens && store.allergens.length > 0 
                     ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
                         ${store.allergens.map(a => `<span style="background: #F0EDE6; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">${escapeHTML(a)}</span>`).join('')}
                        </div>`
                     : '';
 
-                // HTML do Popup atualizado com a variável ${allergensTags} inserida
                 const popupContent = `
                     <div style="font-family: 'Plus Jakarta Sans', sans-serif; width: 210px; padding: 2px 0;">
                         <img src="${store.image}" alt="${safeName}" style="width: 100%; height: 95px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 8px;">
@@ -890,26 +884,33 @@
         searchInput.addEventListener('input', (e) => { State.searchFilters.query = e.target.value; renderSearchResults(); });
         document.getElementById('adv-filter-trigger').addEventListener('click', () => { document.getElementById('adv-filters-box').classList.toggle('open'); });
         
+        // NOVO: 'category' inserido no array e mapeado no mapKey para os Listeners funcionarem
         ['time', 'type', 'price', 'category'].forEach(filter => {
-            document.getElementById(`filter-${filter}`).addEventListener('change', (e) => {
-                const mapKey = { time: 'pickupTime', type: 'type', price: 'maxPrice', category: 'category' }; // Adicionado category aqui
-                State.searchFilters[mapKey[filter]] = e.target.value;
-                renderSearchResults();
-            });
+            const el = document.getElementById(`filter-${filter}`);
+            if (el) {
+                el.addEventListener('change', (e) => {
+                    const mapKey = { time: 'pickupTime', type: 'type', price: 'maxPrice', category: 'category' };
+                    State.searchFilters[mapKey[filter]] = e.target.value;
+                    renderSearchResults();
+                });
+            }
         });
 
         ['vegan', 'gluten'].forEach(filter => {
-            document.getElementById(`filter-${filter}`).addEventListener('change', (e) => {
-                const mapKey = { vegan: 'vegan', gluten: 'glutenFree' };
-                State.searchFilters[mapKey[filter]] = e.target.checked;
-                renderSearchResults();
-            });
+            const el = document.getElementById(`filter-${filter}`);
+            if (el) {
+                el.addEventListener('change', (e) => {
+                    const mapKey = { vegan: 'vegan', gluten: 'glutenFree' };
+                    State.searchFilters[mapKey[filter]] = e.target.checked;
+                    renderSearchResults();
+                });
+            }
         });
 
         function renderSearchResults() {
             const container = document.getElementById('search-results-container');
             const results = getFilteredStores();
-            if (State.searchFilters.query === '' && State.searchFilters.pickupTime === 'any') {
+            if (State.searchFilters.query === '' && State.searchFilters.pickupTime === 'any' && State.searchFilters.type === 'any' && State.searchFilters.category === 'any') {
                 container.innerHTML = `<div class="empty-state"><i data-lucide="search"></i><p>Procura petiscos ou padarias perto de ti.</p></div>`;
             } else if (results.length === 0) {
                 container.innerHTML = `<div class="empty-state"><i data-lucide="frown"></i><p>Sem correspondências para a tua pesquisa.</p></div>`;
@@ -1026,7 +1027,6 @@
             };
             State.orderHistory.push(newOrder);
 
-            // Substituído alert por showToast
             showToast(State.deliveryMethod === 'bike' ? "🎉 Pedido efetuado! O estafeta de bicicleta vai realizar a entrega." : "🎉 Pedido efetuado! Já te podes deslocar para a recolha.");
             
             State.cart = []; 
