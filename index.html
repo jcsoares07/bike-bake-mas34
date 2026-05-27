@@ -103,7 +103,8 @@
             background-color: var(--text-main); color: white; padding: 12px 20px;
             border-radius: var(--radius-lg); font-size: 0.85rem; font-weight: 600;
             opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000; box-shadow: var(--shadow-lg); white-space: nowrap;
+            z-index: 10001; /* <-- ALTERADO DE 2000 PARA 10001 */
+            box-shadow: var(--shadow-lg); white-space: nowrap;
         }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
