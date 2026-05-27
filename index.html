@@ -372,6 +372,17 @@
                 </div>
 
                 <div class="filter-group">
+                    <label for="filter-category">Categoria de Produto</label>
+                    <select id="filter-category" class="search-input" style="padding: 10px;">
+                        <option value="any">Qualquer categoria</option>
+                        <option value="pao">Pão</option>
+                        <option value="doce">Doce / Pastelaria</option>
+                        <option value="salgado">Salgado / Lanche</option>
+                        <option value="misto">Misto</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
                     <label for="filter-price">Preço Máximo</label>
                     <select id="filter-price" class="search-input" style="padding: 10px;">
                         <option value="any">Qualquer preço</option>
@@ -547,11 +558,16 @@
         1. MOCK DATA E GESTÃO DE ESTADO
         ========================================================================== */
         const INITIAL_STORES = [
-            { id: 1, name: "Padaria Ria Bakes", type: "bakery", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop&q=60", distance: 0.4, rating: 4.8, originalPrice: 2.50, salePrice: 1.00, pickupTime: "19:30 - 20:30", pickupPeriod: "evening", productName: "3 Pães de Água", isVegan: true, allergens: ["Glúten"], coords: [40.6415, -8.6536] },
-            { id: 2, name: "Confeitaria da Praça", type: "bakery", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=60", distance: 1.2, rating: 4.6, originalPrice: 3.50, salePrice: 1.50, pickupTime: "18:00 - 19:00", pickupPeriod: "evening", productName: "1 Croissant Brioche", isVegan: false, allergens: ["Glúten", "Lactose", "Frutos secos"], coords: [40.6400, -8.6550] },
-            { id: 3, name: "Massa Mãe - Padaria", type: "bakery", image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop&q=60", distance: 0.8, rating: 4.9, originalPrice: 4.00, salePrice: 2.00, pickupTime: "10:30 - 12:00", pickupPeriod: "morning", productName: "1 Pão de Centeio Rústico", isVegan: true, allergens: ["Glúten"], coords: [40.6435, -8.6510] },
-            { id: 4, name: "O Forno Verde Vegano", type: "pastry", image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400&auto=format&fit=crop&q=60", distance: 2.5, rating: 4.7, originalPrice: 5.50, salePrice: 2.50, pickupTime: "16:00 - 17:30", pickupPeriod: "afternoon", productName: "2 Muffins de Banana", isVegan: true, allergens: ["Glúten", "Frutos secos"], coords: [40.6385, -8.6580] },
-            { id: 5, name: "Ovos Moles Gourmet", type: "pastry", image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60", distance: 1.9, rating: 4.5, originalPrice: 8.00, salePrice: 5.50, pickupTime: "20:00 - 21:00", pickupPeriod: "evening", productName: "4 Ovos Moles de Aveiro", isVegan: false, allergens: ["Lactose"], coords: [40.6405, -8.6530] }
+            { id: 1, name: "Padaria Ria Bakes", type: "bakery", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&auto=format&fit=crop&q=60", distance: 0.4, rating: 4.8, originalPrice: 2.50, salePrice: 1.00, pickupTime: "19:30 - 20:30", pickupPeriod: "evening", productName: "3 Pães de Água", isVegan: true, allergens: ["Glúten"], category: "pao", coords: [40.6415, -8.6536] },
+            { id: 2, name: "Confeitaria da Praça", type: "bakery", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&auto=format&fit=crop&q=60", distance: 1.2, rating: 4.6, originalPrice: 3.50, salePrice: 1.50, pickupTime: "18:00 - 19:00", pickupPeriod: "evening", productName: "1 Croissant Brioche", isVegan: false, allergens: ["Glúten", "Lactose", "Frutos secos"], category: "doce", coords: [40.6400, -8.6550] },
+            { id: 3, name: "Massa Mãe - Padaria", type: "bakery", image: "https://images.unsplash.com/photo-1549931319-a545dcf3bc73?w=400&auto=format&fit=crop&q=60", distance: 0.8, rating: 4.9, originalPrice: 4.00, salePrice: 2.00, pickupTime: "10:30 - 12:00", pickupPeriod: "morning", productName: "1 Pão de Centeio Rústico", isVegan: true, allergens: ["Glúten"], category: "pao", coords: [40.6435, -8.6510] },
+            { id: 4, name: "O Forno Verde Vegano", type: "pastry", image: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?w=400&auto=format&fit=crop&q=60", distance: 2.5, rating: 4.7, originalPrice: 5.50, salePrice: 2.50, pickupTime: "16:00 - 17:30", pickupPeriod: "afternoon", productName: "2 Muffins de Banana", isVegan: true, allergens: ["Glúten", "Frutos secos"], category: "doce", coords: [40.6385, -8.6580] },
+            { id: 5, name: "Ovos Moles Gourmet", type: "pastry", image: "https://images.unsplash.com/photo-1587314168485-3236d6710814?w=400&auto=format&fit=crop&q=60", distance: 1.9, rating: 4.5, originalPrice: 8.00, salePrice: 5.50, pickupTime: "20:00 - 21:00", pickupPeriod: "evening", productName: "4 Ovos Moles de Aveiro", isVegan: false, allergens: ["Lactose"], category: "doce", coords: [40.6405, -8.6530] },
+            { id: 6, name: "Pão Quente do Campus", type: "bakery", image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&auto=format&fit=crop&q=60", distance: 0.3, rating: 4.4, originalPrice: 4.50, salePrice: 1.50, pickupTime: "18:30 - 19:30", pickupPeriod: "evening", productName: "Saco Misto (Pão e Lanches)", isVegan: false, allergens: ["Glúten", "Lactose"], category: "misto", coords: [40.6310, -8.6580] },
+            { id: 7, name: "Pastelaria Beira-Ria", type: "pastry", image: "https://images.unsplash.com/photo-1514050682283-a41e9d80d293?w=400&auto=format&fit=crop&q=60", distance: 1.5, rating: 4.8, originalPrice: 6.00, salePrice: 2.50, pickupTime: "19:00 - 20:00", pickupPeriod: "evening", productName: "Pack 4 Pastéis de Nata", isVegan: false, allergens: ["Glúten", "Lactose", "Ovo"], category: "doce", coords: [40.6390, -8.6500] },
+            { id: 8, name: "A Fornada Central", type: "bakery", image: "https://images.unsplash.com/photo-1534620808146-d33bb39128b2?w=400&auto=format&fit=crop&q=60", distance: 2.1, rating: 4.2, originalPrice: 5.00, salePrice: 2.00, pickupTime: "13:00 - 14:30", pickupPeriod: "afternoon", productName: "Metade de Broa de Milho", isVegan: true, allergens: ["Glúten"], category: "pao", coords: [40.6450, -8.6480] },
+            { id: 9, name: "Doçaria de São Gonçalinho", type: "pastry", image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&auto=format&fit=crop&q=60", distance: 0.9, rating: 4.6, originalPrice: 7.50, salePrice: 3.00, pickupTime: "20:30 - 21:30", pickupPeriod: "evening", productName: "2 Fatias de Bolo Variadas", isVegan: false, allergens: ["Glúten", "Lactose", "Frutos secos"], category: "doce", coords: [40.6440, -8.6540] },
+            { id: 10, name: "Padaria da Estação", type: "bakery", image: "https://images.unsplash.com/photo-1574316071802-0d684efa7ab5?w=400&auto=format&fit=crop&q=60", distance: 1.1, rating: 4.9, originalPrice: 3.00, salePrice: 1.00, pickupTime: "08:30 - 09:30", pickupPeriod: "morning", productName: "Sortido de Pães de Trigo", isVegan: true, allergens: ["Glúten"], category: "pao", coords: [40.6430, -8.6400] }
         ];
 
         const State = {
@@ -564,7 +580,7 @@
             accounts: safeJSONParse('bb_accounts', []),
             preferences: safeJSONParse('bb_prefs', { notifSurplus: true, notifOrders: true, radius: '5', theme: 'light' }), 
             homeFilters: { quick: 'all' },
-            searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', vegan: false, glutenFree: false },
+            searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', category: 'any', vegan: false, glutenFree: false },
             currentView: 'home', 
             activeSubView: 'list', 
             mapInstance: null,
@@ -729,6 +745,10 @@
                     if (State.searchFilters.pickupTime !== 'any' && store.pickupPeriod !== State.searchFilters.pickupTime) return false;
                     if (State.searchFilters.type !== 'any' && store.type !== State.searchFilters.type) return false;
                     if (State.searchFilters.maxPrice !== 'any' && store.salePrice > parseFloat(State.searchFilters.maxPrice)) return false;
+                    
+                    // NOVA LINHA PARA A CATEGORIA:
+                    if (State.searchFilters.category !== 'any' && store.category !== State.searchFilters.category) return false;
+
                     if (State.searchFilters.vegan && !store.isVegan) return false;
                     if (State.searchFilters.glutenFree && store.allergens.includes("Glúten")) return false;
                 }
@@ -870,9 +890,9 @@
         searchInput.addEventListener('input', (e) => { State.searchFilters.query = e.target.value; renderSearchResults(); });
         document.getElementById('adv-filter-trigger').addEventListener('click', () => { document.getElementById('adv-filters-box').classList.toggle('open'); });
         
-        ['time', 'type', 'price'].forEach(filter => {
+        ['time', 'type', 'price', 'category'].forEach(filter => {
             document.getElementById(`filter-${filter}`).addEventListener('change', (e) => {
-                const mapKey = { time: 'pickupTime', type: 'type', price: 'maxPrice' };
+                const mapKey = { time: 'pickupTime', type: 'type', price: 'maxPrice', category: 'category' }; // Adicionado category aqui
                 State.searchFilters[mapKey[filter]] = e.target.value;
                 renderSearchResults();
             });
