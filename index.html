@@ -618,12 +618,14 @@
             const pass = document.getElementById('reg-pass').value;
 
             if (name.length < 2 || !email.includes('@') || pass.length < 4) {
-                alert('Por favor, preenche todos os campos corretamente (a password requer mín. 4 caracteres).'); 
+                // Substituído alert por showToast
+                showToast('Por favor, preenche todos os campos corretamente (a password requer mín. 4 caracteres).'); 
                 return;
             }
 
             if (State.accounts.some(a => a.email === email)) {
-                alert('Este email já está associado a uma conta.'); 
+                // Substituído alert por showToast
+                showToast('Este email já está associado a uma conta.'); 
                 return;
             }
 
@@ -648,7 +650,8 @@
                 State.loggedUser = matchedUser;
                 performLoginTransition(matchedUser);
             } else {
-                alert('Credenciais inválidas. Verifica o email e a palavra-passe, ou cria uma conta nova.');
+                // Substituído alert por showToast
+                showToast('Credenciais inválidas. Verifica o email e a palavra-passe, ou cria uma conta nova.');
             }
         });
 
@@ -826,6 +829,14 @@
                 const safeName = escapeHTML(store.name);
                 const safeProduct = escapeHTML(store.productName);
 
+                // Nova secção para gerar as tags dos alergénios para o mapa
+                const allergensTags = store.allergens && store.allergens.length > 0 
+                    ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+                        ${store.allergens.map(a => `<span style="background: #F0EDE6; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">${escapeHTML(a)}</span>`).join('')}
+                       </div>`
+                    : '';
+
+                // HTML do Popup atualizado com a variável ${allergensTags} inserida
                 const popupContent = `
                     <div style="font-family: 'Plus Jakarta Sans', sans-serif; width: 210px; padding: 2px 0;">
                         <img src="${store.image}" alt="${safeName}" style="width: 100%; height: 95px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 8px;">
@@ -834,6 +845,7 @@
                             <span style="color: #FFB703; font-size: 0.8rem; font-weight: 600;">★ ${store.rating}</span>
                         </div>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">${safeProduct}</p>
+                        ${allergensTags}
                         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px;">
                             <span style="font-size: 1.1rem; font-weight: 700; color: var(--accent);">${store.salePrice.toFixed(2)}€</span>
                             <button onclick="addToCart(${store.id})" style="background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.8rem; cursor: pointer;">
@@ -993,7 +1005,8 @@
             };
             State.orderHistory.push(newOrder);
 
-            alert(State.deliveryMethod === 'bike' ? "🎉 Pedido efetuado! O estafeta de bicicleta vai realizar a entrega." : "🎉 Pedido efetuado! Já te podes deslocar para a recolha.");
+            // Substituído alert por showToast
+            showToast(State.deliveryMethod === 'bike' ? "🎉 Pedido efetuado! O estafeta de bicicleta vai realizar a entrega." : "🎉 Pedido efetuado! Já te podes deslocar para a recolha.");
             
             State.cart = []; 
             State.save(); 
