@@ -103,6 +103,23 @@
                 <button id="btn-register" class="btn-checkout" style="margin-top: 0;">Criar Conta</button>
                 <span class="auth-toggle-link" id="go-to-login">Já tens conta? Iniciar Sessão</span>
             </div>
+
+            <div id="form-recovery" class="hidden">
+                <h2 style="font-size: 1.2rem; color: var(--primary); margin-bottom: 8px;">Conta Existente</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Deseja alterar a sua palavra-passe?</p>
+                
+                <div class="search-container" style="margin-bottom: 12px;">
+                    <i data-lucide="mail"></i>
+                    <input type="email" id="recover-email" class="search-input" placeholder="Endereço de Email" style="padding-left: 40px;">
+                </div>
+                <div class="search-container" style="margin-bottom: 24px;">
+                    <i data-lucide="lock"></i>
+                    <input type="password" id="recover-pass" class="search-input" placeholder="Nova palavra-passe (mín. 4 carateres)" style="padding-left: 40px;">
+                </div>
+                
+                <button id="btn-recover" class="btn-checkout" style="margin-top: 0;">Alterar Palavra-passe</button>
+                <span class="auth-toggle-link" id="go-to-login-from-rec">Voltar ao Início de Sessão</span>
+            </div>
         </div>
     </div>
 

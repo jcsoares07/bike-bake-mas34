@@ -89,6 +89,38 @@ document.getElementById('go-to-login').addEventListener('click', () => {
     document.getElementById('form-login').classList.remove('hidden');
 });
 
+// Navegar de volta para o login a partir da recuperação
+document.getElementById('go-to-login-from-rec').addEventListener('click', () => {
+    document.getElementById('form-recovery').classList.add('hidden');
+    document.getElementById('form-login').classList.remove('hidden');
+});
+
+// Lógica de alteração da palavra-passe
+document.getElementById('btn-recover').addEventListener('click', () => {
+    const email = document.getElementById('recover-email').value.trim();
+    const newPass = document.getElementById('recover-pass').value;
+
+    if (newPass.length < 4) {
+        showToast('A nova palavra-passe deve ter pelo menos 4 caracteres.');
+        return;
+    }
+
+    const account = State.accounts.find(a => a.email === email);
+    if (account) {
+        // Atualiza a password
+        account.pass = newPass;
+        localStorage.setItem('bb_accounts', JSON.stringify(State.accounts));
+        
+        showToast('Palavra-passe alterada com sucesso! Já podes iniciar sessão.');
+        
+        // Volta para o ecrã de login
+        document.getElementById('form-recovery').classList.add('hidden');
+        document.getElementById('form-login').classList.remove('hidden');
+    } else {
+        showToast('Conta não encontrada com esse email.');
+    }
+});
+
 function performLoginTransition(userObj) {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('main-app-container').classList.remove('hidden');
@@ -107,28 +139,15 @@ document.getElementById('btn-register').addEventListener('click', () => {
         return;
     }
 
-    // Dentro do Listener do btn-register, substitui a verificação antiga por esta:
     if (State.accounts.some(a => a.email === email)) {
-        // Apresenta a mensagem solicitada e pergunta se deseja alterar a palavra-passe
-        if (confirm('Email já registado. Deseja alterar a palavra-passe?')) {
-            const newPass = prompt('Introduza a nova palavra-passe (mín. 4 caracteres):');
-            
-            if (newPass && newPass.length >= 4) {
-                // Encontra a conta correspondente e atualiza a password
-                const account = State.accounts.find(a => a.email === email);
-                if (account) {
-                    account.pass = newPass;
-                    localStorage.setItem('bb_accounts', JSON.stringify(State.accounts));
-                    showToast('Palavra-passe alterada com sucesso! Já pode iniciar sessão.');
-                    
-                    // Redireciona o utilizador para o formulário de login
-                    document.getElementById('form-register').classList.add('hidden');
-                    document.getElementById('form-login').classList.remove('hidden');
-                }
-            } else if (newPass) {
-                showToast('Operação cancelada: A nova palavra-passe deve ter pelo menos 4 caracteres.');
-            }
-        }
+        showToast('Email já registado.'); 
+        
+        // Esconde o registo e mostra a recuperação
+        document.getElementById('form-register').classList.add('hidden');
+        document.getElementById('form-recovery').classList.remove('hidden');
+        
+        // Preenche automaticamente o email que o utilizador acabou de tentar usar
+        document.getElementById('recover-email').value = email;
         return;
     }
 
