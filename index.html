@@ -152,22 +152,23 @@
         .stores-grid { display: flex; flex-direction: column; gap: 16px; }
         .store-card { background: var(--surface); border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); transition: var(--transition); position: relative; }
         .store-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .card-image-wrapper { position: relative; height: 140px; background: #E9E6E0; }
+        
+        /* Modificações de layout para compactar os cartões */
+        .card-image-wrapper { position: relative; height: 110px; background: #E9E6E0; }
         .card-img { width: 100%; height: 100%; object-fit: cover; }
         .time-badge { position: absolute; bottom: 12px; left: 12px; background: rgba(38, 70, 83, 0.85); color: white; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; }
         .distance-badge { position: absolute; top: 12px; right: 12px; background: var(--surface); color: var(--text-main); padding: 4px 8px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); }
-        .card-content { padding: 16px; }
+        .card-content { padding: 12px; }
         .card-header-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-        .store-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+        .store-title { font-size: 1rem; font-weight: 700; color: var(--text-main); }
         .rating { display: flex; align-items: center; gap: 4px; font-size: 0.85rem; font-weight: 600; }
         .rating svg { color: #FFB703; fill: #FFB703; width: 14px; height: 14px; }
-        .product-preview { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; }
-        .allergy-alert { display: flex; align-items: center; gap: 6px; background: #FFEAE6; color: #C13515; padding: 6px 10px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 600; margin-bottom: 12px; }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
+        .product-preview { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid var(--border); }
         .price-box { display: flex; flex-direction: column; }
         .original-price { font-size: 0.8rem; text-decoration: line-through; color: var(--text-muted); }
         .bag-price { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-        .btn-add-bag { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: var(--transition); }
+        .btn-add-bag { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: var(--transition); }
         .btn-add-bag:hover { background: var(--primary-light); }
 
         #map-view { position: relative; width: 100%; height: calc(100vh - 150px); display: none; }
@@ -452,14 +453,6 @@
             </div>
 
             <div class="settings-section">
-                <h3><i data-lucide="shield-alert" style="color: var(--accent); width:18px;"></i> Restrições e Alergias</h3>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Ativa para receberes avisos de segurança.</p>
-                <label class="checkbox-label"><input type="checkbox" class="allergy-checkbox" value="Glúten"><span>Contém Glúten</span></label>
-                <label class="checkbox-label"><input type="checkbox" class="allergy-checkbox" value="Lactose"><span>Contém Lactose</span></label>
-                <label class="checkbox-label"><input type="checkbox" class="allergy-checkbox" value="Frutos secos"><span>Contém Frutos Secos</span></label>
-            </div>
-
-            <div class="settings-section">
                 <h3><i data-lucide="bell" style="width:18px;"></i> Notificações</h3>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <span style="font-size: 0.9rem;">Alertas de Novos Excedentes</span>
@@ -563,9 +556,8 @@
         const State = {
             stores: INITIAL_STORES,
             cart: safeJSONParse('bb_cart', []),
-            orderHistory: safeJSONParse('bb_orders', []), // NOVO: Armazena histórico
+            orderHistory: safeJSONParse('bb_orders', []),
             isPremium: safeJSONParse('bb_premium', false),
-            activeAllergens: safeJSONParse('bb_allergens', []),
             deliveryMethod: safeJSONParse('bb_delivery', 'pickup'),
             loggedUser: safeJSONParse('bb_user_session', null),
             accounts: safeJSONParse('bb_accounts', []),
@@ -579,9 +571,8 @@
 
             save() {
                 localStorage.setItem('bb_cart', JSON.stringify(this.cart));
-                localStorage.setItem('bb_orders', JSON.stringify(this.orderHistory)); // Salvar histórico
+                localStorage.setItem('bb_orders', JSON.stringify(this.orderHistory));
                 localStorage.setItem('bb_premium', JSON.stringify(this.isPremium));
-                localStorage.setItem('bb_allergens', JSON.stringify(this.activeAllergens));
                 localStorage.setItem('bb_delivery', JSON.stringify(this.deliveryMethod));
                 localStorage.setItem('bb_prefs', JSON.stringify(this.preferences));
                 this.renderAll();
@@ -592,7 +583,7 @@
                 renderSearchResults();
                 renderCartView();
                 renderCartBadge();
-                renderHistoryView(); // NOVO: Renderiza as compras antigas
+                renderHistoryView(); 
                 renderSettingsView();
                 
                 if (this.currentView === 'home' && this.activeSubView === 'map') {
@@ -683,7 +674,7 @@
             document.getElementById('view-search').classList.remove('active');
             document.getElementById('view-cart').classList.remove('active');
             document.getElementById('view-settings').classList.remove('active');
-            document.getElementById('view-history').classList.remove('active'); // Ocultar nova secção
+            document.getElementById('view-history').classList.remove('active');
 
             const headerControls = document.getElementById('header-controls');
             headerControls.style.display = (viewName === 'home') ? 'flex' : 'none';
@@ -750,11 +741,16 @@
         }
 
         function buildStoreCardHTML(store) {
-            const conflictAllergens = store.allergens.filter(allergy => State.activeAllergens.includes(allergy));
-            const hasAllergyWarning = conflictAllergens.length > 0;
             const safeName = escapeHTML(store.name);
             const safeProduct = escapeHTML(store.productName);
-
+        
+            // Nova secção para mostrar os alergénios como tags compactas
+            const allergensTags = store.allergens && store.allergens.length > 0 
+                ? `<div style="display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px;">
+                    ${store.allergens.map(a => `<span style="background: #F0EDE6; color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;">${escapeHTML(a)}</span>`).join('')}
+                   </div>`
+                : '';
+        
             return `
                 <div class="store-card" data-id="${store.id}">
                     <div class="card-image-wrapper">
@@ -768,14 +764,14 @@
                             <div class="rating"><i data-lucide="star"></i><span>${store.rating}</span></div>
                         </div>
                         <p class="product-preview">${safeProduct}</p>
-                        ${hasAllergyWarning ? `<div class="allergy-alert"><i data-lucide="alert-triangle" style="width:14px; height:14px;"></i><span>Aviso: Contém ${conflictAllergens.join(', ')}</span></div>` : ''}
+                        ${allergensTags}
                         <div class="card-footer">
                             <div class="price-box">
                                 <span class="original-price">${store.originalPrice.toFixed(2)}€</span>
                                 <span class="bag-price">${store.salePrice.toFixed(2)}€</span>
                             </div>
                             <button class="btn-add-bag" onclick="addToCart(${store.id})" aria-label="Adicionar ${safeName} à sacola">
-                                <i data-lucide="shopping-bag" style="width:16px; height:16px;"></i><span>Sacola</span>
+                                <i data-lucide="shopping-bag" style="width:14px; height:14px;"></i><span>Sacola</span>
                             </button>
                         </div>
                     </div>
@@ -987,14 +983,13 @@
         document.getElementById('btn-checkout').addEventListener('click', () => {
             const totals = calculateCartTotals();
             
-            // Adicionar à lista do Histórico
             const newOrder = {
                 id: Date.now(),
                 date: new Date().toISOString(),
                 items: [...State.cart],
                 total: totals.totalFinal,
                 method: State.deliveryMethod,
-                review: null // Ainda não avaliado
+                review: null 
             };
             State.orderHistory.push(newOrder);
 
@@ -1002,7 +997,7 @@
             
             State.cart = []; 
             State.save(); 
-            switchView('history'); // Leva o utilizador logo para o Histórico após checkout
+            switchView('history');
         });
 
         /* ==========================================================================
@@ -1073,7 +1068,7 @@
         function updateStarUI() {
             document.querySelectorAll('#review-stars span').forEach(span => {
                 const val = parseInt(span.getAttribute('data-val'));
-                const svg = span.querySelector('svg'); // Procura o SVG gerado pela Lucide
+                const svg = span.querySelector('svg');
                 
                 if (svg) {
                     if (val <= currentReviewStars) {
@@ -1143,15 +1138,6 @@
                 State.save();
                 document.getElementById('premium-modal').classList.remove('active');
                 showToast('Bem-vindo ao Premium! 🎉');
-            });
-
-            document.querySelectorAll('.allergy-checkbox').forEach(cb => {
-                if (State.activeAllergens.includes(cb.value)) cb.checked = true;
-                cb.addEventListener('change', () => {
-                    const activeChecked = [];
-                    document.querySelectorAll('.allergy-checkbox').forEach(box => { if (box.checked) activeChecked.push(box.value); });
-                    State.activeAllergens = activeChecked; State.save();
-                });
             });
 
             document.querySelectorAll('input[name="deliveryMethod"]').forEach(radio => {
