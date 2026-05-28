@@ -97,6 +97,27 @@ body {
     display: inline-block;
 }
 
+/* Atualização do Logo na Página de Login */
+.login-header-icon {
+    width: 100px;
+    height: 100px;
+    background-image: url('logo_bike_bake.png'); /* Usa o novo logo como fundo */
+    background-size: contain; /* Garante que o logo caiba no container */
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Removemos o fundo verde e o border-radius circular */
+    background-color: transparent; 
+}
+
+/* Removemos a estilização antiga que inseria o ícone Font Awesome */
+.login-header-icon::after {
+    content: none;
+}
+
 /* Modais */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
