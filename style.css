@@ -235,3 +235,44 @@ input:checked + .slider:before { transform: translateX(24px); }
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 .empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; stroke-width: 1.5; }
+
+/* ==========================================================================
+    OTHERS
+    ========================================================================== */
+/* 1. Estilo para o Logo no Ecrã de Login */
+.auth-logo {
+    display: block;
+    width: auto;
+    height: 80px; /* Ajuste esta altura conforme necessário para o seu logo */
+    margin: 0 auto 20px auto; /* Centraliza horizontalmente e dá margem inferior */
+    object-fit: contain; /* Garante que a imagem não seja distorcida */
+}
+
+/* 2. Estilo para o Logo no Cabeçalho Principal (pós-login) */
+.app-header .app-logo-header {
+    height: 32px; /* Altura menor para caber na barra de navegação */
+    width: auto;
+    margin-right: 10px; /* Espaço entre o logo e o texto "Bike&Bake" */
+    object-fit: contain;
+}
+
+/* Ajuste ligeiro no cabeçalho para alinhar logo e texto */
+.app-header {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o logo, texto e ícones */
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Garante que o H1 no cabeçalho não empurre tudo */
+.app-header h1 {
+    font-size: 1.2rem;
+    margin: 0;
+    flex-grow: 1; /* Faz o título ocupar o espaço restante se necessário */
+}
