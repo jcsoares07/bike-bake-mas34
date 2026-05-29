@@ -43,11 +43,10 @@ const State = {
     orderHistory: safeJSONParse('bb_orders', []),
     isPremium: safeJSONParse('bb_premium', false),
     deliveryMethod: safeJSONParse('bb_delivery', 'pickup'),
-    loggedUser: safeJSONParse('bb_user_session', null),
+    loggedUser: null, // Não carrega mais do localStorage
     accounts: safeJSONParse('bb_accounts', []),
     preferences: safeJSONParse('bb_prefs', { notifSurplus: true, notifOrders: true, radius: '5', theme: 'light' }), 
     homeFilters: { quick: 'all' },
-    // NOVO: 'category' adicionado corretamente ao objeto inicial
     searchFilters: { query: '', pickupTime: 'any', type: 'any', maxPrice: 'any', category: 'any', vegan: false, glutenFree: false },
     currentView: 'home', 
     activeSubView: 'list', 
@@ -160,7 +159,7 @@ document.getElementById('btn-register').addEventListener('click', () => {
     localStorage.setItem('bb_accounts', JSON.stringify(State.accounts));
     
     showToast('Conta criada com sucesso! Bem-vindo(a).');
-    localStorage.setItem('bb_user_session', JSON.stringify(newUser));
+    // Não guarda a sessão localmente
     State.loggedUser = newUser;
     performLoginTransition(newUser);
 });
@@ -172,7 +171,7 @@ document.getElementById('btn-login').addEventListener('click', () => {
     const matchedUser = State.accounts.find(a => a.email === email && a.pass === pass);
     
     if (matchedUser) {
-        localStorage.setItem('bb_user_session', JSON.stringify(matchedUser));
+        // Não guarda a sessão localmente
         State.loggedUser = matchedUser;
         performLoginTransition(matchedUser);
     } else {
@@ -181,7 +180,7 @@ document.getElementById('btn-login').addEventListener('click', () => {
 });
 
 document.getElementById('btn-logout').addEventListener('click', () => {
-    localStorage.removeItem('bb_user_session');
+    // Apenas recarrega a página para limpar o state em memória
     location.reload();
 });
 
