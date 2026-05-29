@@ -83,6 +83,13 @@ body {
     background-size: 400px; /* Adjust this to make the items larger or smaller */    
 }
 
+.login-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
 .login-container {
     width: 100%; 
     max-width: 320px; 
