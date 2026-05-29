@@ -114,7 +114,7 @@ body {
     display: inline-block;
 }
 
-.header-icon {
+.logo-header-icon {
     width: 100px;
     height: 100px;
     background-image: url('logo_bike_bake.png');
@@ -126,6 +126,16 @@ body {
     align-items: center;
     justify-content: center;
     background-color: transparent; 
+}
+
+.header-logo {
+    width: 32px;
+    height: 32px;
+    background-image: url('logo_bike_bake.png');
+    background-size: contain; 
+    background-repeat: no-repeat;
+    background-position: center;
+    display: inline-block;
 }
 
 /* Modais */
