@@ -114,7 +114,7 @@ body {
     display: inline-block;
 }
 
-.login-header-icon {
+.header-icon {
     width: 100px;
     height: 100px;
     background-image: url('logo_bike_bake.png');
